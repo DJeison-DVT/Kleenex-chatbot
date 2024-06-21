@@ -87,3 +87,23 @@ async def test_delete_user_by_phone():
         assert response.status_code == 200
         response = await client.delete(FULL_URL + "1234567892")
         assert response.status_code == 200
+
+
+@pytest.mark.asyncio
+async def test_put_user_flow():
+    async with httpx.AsyncClient() as client:
+        response = await client.post(FULL_URL, json={"phone": "1234567890", "terms": True})
+        assert response.status_code == 200
+
+        user = response.json()
+        user['name'] = "Jane Doe"
+        user = {k: v for k, v in user.items() if v is not None}
+        
+        response = await client.put(FULL_URL + "1234567890", json=user)
+        assert response.status_code == 200
+        user = response.json()
+        print(user)
+
+
+        response = await client.delete(FULL_URL + "1234567890")
+        assert response.status_code == 200

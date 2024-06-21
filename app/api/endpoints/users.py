@@ -11,7 +11,6 @@ async def fetch_all_users(db = Depends(get_db), response_model=User):
     cursor = db.users.find({})
     users = []
     async for user in cursor:
-        user['_id'] = user.get('_id')
         users.append(User(**user))
     return serialize_users(users)
 
@@ -56,23 +55,20 @@ async def update_user_by_phone(phone: str, user: User, db = Depends(get_db), res
     old_user = await db.users.find_one({"phone": phone})
     if not old_user:
         raise HTTPException(status_code=404, detail="User not found")
-    
+                    
     id = old_user.get('_id')
     try:
-        await db.users.update_one({"_id": id}, {
-            "$set": {
-                "phone": user.phone,
-                "terms": user.terms,
-                "name": user.name,
-                "email": user.email,
-                "flow_step": user.flow_step
-            }
-        })
+        await db.users.update_one({"_id": id}, {"$set": {
+            "phone": user.phone,
+            "terms": user.terms,
+            "name": user.name,
+            "email": user.email,
+            "flow_step": user.flow_step
+        }})
     except Exception as e:
-        print("update error")
         print(e)
         raise HTTPException(status_code=500, detail=f"Error: {e}")
-
-    user = await db.users.find_one({"phone": phone})
-
-    return user
+    
+    user = await db.users.find_one({"_id": id})
+    print(user)
+    return serialize_user(User(**user))

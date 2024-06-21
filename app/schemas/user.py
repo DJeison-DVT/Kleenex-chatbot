@@ -1,4 +1,5 @@
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, Field
+from bson import ObjectId
 
 class UserCreation(BaseModel):
     phone: str
