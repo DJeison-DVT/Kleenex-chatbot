@@ -24,3 +24,6 @@ def UserCollection() -> AgnosticDatabase:
 
 def ParticipantCollection() -> AgnosticDatabase:
     return _MongoClientSingleton().participant_collection
+
+async def ping():
+    await MongoDatabase().command("ping")

@@ -4,7 +4,6 @@ from pydantic import EmailStr
 from app.api.deps import get_db
 from app.serializers.user import serialize_user, serialize_users
 
-
 router = APIRouter()
 
 @router.get("/")
@@ -12,6 +11,7 @@ async def fetch_all_users(db = Depends(get_db), response_model=User):
     cursor = db.users.find({})
     users = []
     async for user in cursor:
+        user['_id'] = user.get('_id')
         users.append(User(**user))
     return serialize_users(users)
 
@@ -20,7 +20,6 @@ async def create_user(
     user: UserCreation,
     db = Depends(get_db)
 ) -> User:
-    print(f"user: {user}")
     phone = user.phone
     terms = user.terms
 
@@ -36,9 +35,16 @@ async def create_user(
   
     return serialize_user(User(**new_user))
 
+@router.delete("/{phone}")
+async def delete_user_by_phone(phone: str, db = Depends(get_db)):
+    user = await db.users.find_one({"phone": phone})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    await db.users.delete_one({"phone": phone})
+    return {"message": "User deleted successfully"}
+
 @router.get("/{phone}")
 async def fetch_user_by_phone(phone: str, db = Depends(get_db), response_model=User):
-
     user = await db.users.find_one({"phone": phone})
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
@@ -47,11 +53,26 @@ async def fetch_user_by_phone(phone: str, db = Depends(get_db), response_model=U
 
 @router.put("/{phone}")
 async def update_user_by_phone(phone: str, user: User, db = Depends(get_db), response_model=User):
-    user = await db.users.find_one({"phone": phone})
-
-    if not user:
+    old_user = await db.users.find_one({"phone": phone})
+    if not old_user:
         raise HTTPException(status_code=404, detail="User not found")
     
-    await db.users.update_one({"phone": phone}, {"$set": user.model_dump()})
+    id = old_user.get('_id')
+    try:
+        await db.users.update_one({"_id": id}, {
+            "$set": {
+                "phone": user.phone,
+                "terms": user.terms,
+                "name": user.name,
+                "email": user.email,
+                "flow_step": user.flow_step
+            }
+        })
+    except Exception as e:
+        print("update error")
+        print(e)
+        raise HTTPException(status_code=500, detail=f"Error: {e}")
 
+    user = await db.users.find_one({"phone": phone})
 
+    return user

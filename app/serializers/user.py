@@ -2,12 +2,11 @@ from typing import List
 from app.schemas import User
 
 def serialize_user(user: User):
-    print(f"user: {user}")
     return {
         "phone": user.phone,
         "terms": user.terms,
-        "name": user.name,
-        "email": user.email,
+        "name": user.name if user.name else None,
+        "email": user.email if user.email else None,
         "flow_step": user.flow_step
     }
 

@@ -2,3 +2,8 @@ uvicorn
 fastapi
 motor
 odmantic
+pytest
+coverage
+mongomock-motor
+pytest_httpx
+pytest-asyncio

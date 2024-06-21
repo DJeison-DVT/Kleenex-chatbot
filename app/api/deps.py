@@ -1,4 +1,4 @@
-from app.db import MongoDatabase
+from app.db.db import MongoDatabase
 from typing import Generator
 
 def get_db() -> Generator:

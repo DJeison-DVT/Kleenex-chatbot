@@ -1,6 +1,6 @@
 import os
 from pydantic import AnyHttpUrl, BeforeValidator
-from pydantic_settings import BaseSettings
+from pydantic_settings import BaseSettings, SettingsConfigDict
 from typing import Annotated, Any
 from pathlib import Path
 
@@ -12,6 +12,11 @@ def parse_cors(v: Any) -> list[str] | str:
         return v
     raise ValueError(v)
 
+def get_env_path():
+    path = Path(__file__).resolve().parent.parent.parent / ".env"
+    print(path)
+    return path
+
 class Settings(BaseSettings):
     API_STR: str = "/api"
     PROJECT_NAME: str = "Kleenex Chatbot API"
@@ -20,7 +25,8 @@ class Settings(BaseSettings):
     BACKEND_CORS_ORIGINS: Annotated[
         list[AnyHttpUrl] | str, BeforeValidator(parse_cors)
     ] = []
+    BASE_URL: str
 
-    class Config:
-        env_file = Path(__file__).resolve().parent.parent.parent / ".env"
+    model_config = SettingsConfigDict(env_file='.env', env_file_encoding='utf-8')
+    
 settings = Settings()
