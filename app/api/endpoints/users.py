@@ -2,7 +2,7 @@ from fastapi import APIRouter, HTTPException, Depends
 from app.schemas.user import User, UserCreation
 from pydantic import EmailStr
 from app.api.deps import get_db
-from app.serializers.user import serialize_user, serialize_users
+from app.serializers.user import serialize_user, serialize_users, serialize_user_dict
 
 router = APIRouter()
 
@@ -11,7 +11,7 @@ async def fetch_all_users(db = Depends(get_db), response_model=User):
     cursor = db.users.find({})
     users = []
     async for user in cursor:
-        users.append(User(**user))
+        users.append(serialize_user_dict(user))
     return serialize_users(users)
 
 @router.post("/", response_model=User)
@@ -31,8 +31,8 @@ async def create_user(
             raise HTTPException(status_code=409, detail="User already exists")
         raise HTTPException(status_code=500, detail=f"Error: {e}")
     new_user = await db.users.find_one({"_id": result.inserted_id})
-  
-    return serialize_user(User(**new_user))
+
+    return serialize_user(serialize_user_dict(new_user))
 
 @router.delete("/{phone}")
 async def delete_user_by_phone(phone: str, db = Depends(get_db)):
@@ -47,8 +47,7 @@ async def fetch_user_by_phone(phone: str, db = Depends(get_db), response_model=U
     user = await db.users.find_one({"phone": phone})
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
-    
-    return serialize_user(User(**user))
+    return serialize_user(serialize_user_dict(user))
 
 @router.put("/{phone}")
 async def update_user_by_phone(phone: str, user: User, db = Depends(get_db), response_model=User):
@@ -70,5 +69,4 @@ async def update_user_by_phone(phone: str, user: User, db = Depends(get_db), res
         raise HTTPException(status_code=500, detail=f"Error: {e}")
     
     user = await db.users.find_one({"_id": id})
-    print(user)
-    return serialize_user(User(**user))
+    return serialize_user(serialize_user_dict(user))
