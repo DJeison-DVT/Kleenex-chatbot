@@ -1,7 +1,7 @@
 #! /usr/bin/env bash
 
 # Let the DB start
-python ./app/backend_pre_start.py
+python -m app.backend_pre_start
 
 # Create initial DB
-python ./app/initial_db.py
+python -m app.initial_db

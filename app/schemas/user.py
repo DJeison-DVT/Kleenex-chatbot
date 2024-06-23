@@ -1,8 +1,10 @@
 from pydantic import BaseModel, EmailStr, Field
 
+
 class UserCreation(BaseModel):
     phone: str
     terms: bool = False
+
 
 class User(BaseModel):
     id: str = Field(..., alias="_id")
