@@ -2,9 +2,11 @@ from pydantic import BaseModel
 from enum import Enum
 from datetime import datetime
 
+
 class PrizeType(str, Enum):
     digital = "digital"
     physical = "physical"
+
 
 class Products(str, Enum):
     product1 = "product1"
@@ -18,11 +20,13 @@ class Products(str, Enum):
     product9 = "product9"
     product10 = "product10"
 
+
 class Status(str, Enum):
     COMPLETE = "COMPLETE"
     INCOMPLETE = "INCOMPLETE"
     REJECTED = "REJECTED"
     APPROVED = "APPROVED"
+
 
 class Participation(BaseModel):
     phone_number: str
@@ -33,4 +37,3 @@ class Participation(BaseModel):
     priority_number: int | None = None
     type: PrizeType | None = None
     products: list[Products] | None = None
-
