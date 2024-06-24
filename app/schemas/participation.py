@@ -1,4 +1,5 @@
 from pydantic import BaseModel, Field
+from typing import Optional
 from enum import Enum
 from datetime import datetime
 from bson import ObjectId
@@ -46,10 +47,10 @@ class Status(str, Enum):
 class Participation(BaseModel):
     id: str = Field(..., alias="_id")
     user: User
-    ticket_url: str | None = None
+    ticket_url: Optional[str] = None
     ticket_attempts: int = 0
     participationNumber: int = -1
     products: list[Products] = []
     datetime: datetime
     status: Status = Status.INCOMPLETE
-    prizeType: PrizeType | None = None
+    prizeType: Optional[PrizeType] = None
