@@ -1,20 +1,10 @@
 from typing import List
-from functools import wraps
 
 from app.schemas import User
+from app.serializers.decorators import convert_id_to_str
 
 
-def convert_id_to_str(func):
-    @wraps(func)
-    def wrapper(user_dict):
-        if '_id' in user_dict:
-            user_dict['_id'] = str(user_dict['_id'])
-            user = User(**user_dict)
-        return func(user)
-    return wrapper
-
-
-@convert_id_to_str
+@convert_id_to_str(User)
 def serialize_user(user: User):
     return {
         "_id": str(user.id),
