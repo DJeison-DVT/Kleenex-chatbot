@@ -1,6 +1,5 @@
 from typing import Dict, Optional
 from abc import ABC, abstractmethod
-from enum import Enum
 
 from app.schemas.user import User
 from app.chatbot.steps import Steps
@@ -33,6 +32,7 @@ class MultimediaUploadTransition(ServerTransition):
         self.failure_step = failure_step
 
     def api_call(self, user: User, **kwargs):
+        # TODO
         # Simulate upload and return True if successful, False otherwise
         return False  # Change this to the actual upload logic
 
@@ -67,6 +67,7 @@ class DashboardTransition(ServerTransition):
         self.end_step = end_step
 
     def api_call(self, user: User, **kwargs):
+        # TODO
         # Simulate an API call to handle dashboard confirmation
         return False
 

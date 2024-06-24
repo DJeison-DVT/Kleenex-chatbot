@@ -1,10 +1,10 @@
-import pytest 
+import pytest
 import asyncio
 import pytest_asyncio
-from fastapi.testclient import TestClient
 from typing import Generator
+from fastapi.testclient import TestClient
 
-from app.core.config import settings 
+from app.core.config import settings
 from app.db.db import MongoDatabase, _MongoClientSingleton
 from app.db.init_db import init_db
 from app.main import app

@@ -1,6 +1,6 @@
-import httpx
 import pytest
-from httpx import Response
+from httpx import AsyncClient
+
 from app.core.config import settings
 from app.chatbot.steps import Steps
 
@@ -12,30 +12,12 @@ def URLBuilder(path: str) -> str:
     return settings.API_STR + path
 
 
-async def mock_response(request: httpx.Request) -> Response:
-    # Adjusted to match the full URL path
-    if request.url.path == URLBuilder(SECTION):
-        user_data = {"phone": "1234567890", "terms": True}
-        return httpx.Response(status_code=201, json=user_data)
-    # Default response for unspecified routes
-    return httpx.Response(status_code=404)
-
-
 @pytest.mark.asyncio
 async def test_create_user():
-    async with httpx.AsyncClient(transport=httpx.MockTransport(mock_response), base_url=settings.BASE_URL) as client:
-        # Now using full URL that matches the mock_response condition
-        response = await client.post(URLBuilder(SECTION), json={"name": "Jane Doe"})
-        assert response.status_code == 201
-        response = response.json()
-        print(response)
-        assert response == {"phone": "1234567890", "terms": True}
-
-
-@pytest.mark.asyncio
-async def test_create_user_real():
-    async with httpx.AsyncClient() as client:
-        # already exists 1234567890 delete
+    """
+    clears the user if it exists, creates a new user, and deletes the user
+    """
+    async with AsyncClient() as client:
         response = await client.get(FULL_URL + "1234567890")
         if response.status_code == 200:
             response = await client.delete(FULL_URL + "1234567890")
@@ -43,7 +25,6 @@ async def test_create_user_real():
 
         response = await client.post(FULL_URL, json={"phone": "1234567890", "terms": True})
 
-        # Assert the expected status code and response body
         assert response.status_code == 200
         response = response.json()
         assert response['phone'] == "1234567890"
@@ -55,7 +36,10 @@ async def test_create_user_real():
 
 @pytest.mark.asyncio
 async def test_create_multiple_users():
-    async with httpx.AsyncClient() as client:
+    """
+    creates multiple users 
+    """
+    async with AsyncClient() as client:
         response = await client.post(FULL_URL, json={"phone": "1234567890", "terms": True})
         assert response.status_code == 200
         response = await client.post(FULL_URL, json={"phone": "1234567890", "terms": True})
@@ -68,7 +52,10 @@ async def test_create_multiple_users():
 
 @pytest.mark.asyncio
 async def test_fetch_all_users():
-    async with httpx.AsyncClient() as client:
+    """
+    fetches all users
+    """
+    async with AsyncClient() as client:
         response = await client.get(FULL_URL)
         assert response.status_code == 200
         response = response.json()
@@ -77,7 +64,10 @@ async def test_fetch_all_users():
 
 @pytest.mark.asyncio
 async def test_fetch_user_by_phone():
-    async with httpx.AsyncClient() as client:
+    """
+    fetches a user by phone number
+    """
+    async with AsyncClient() as client:
         response = await client.get(FULL_URL + "1234567890")
         assert response.status_code == 200
         response = response.json()
@@ -87,7 +77,10 @@ async def test_fetch_user_by_phone():
 
 @pytest.mark.asyncio
 async def test_delete_user_by_phone():
-    async with httpx.AsyncClient() as client:
+    """
+    deletes a user by phone number
+    """
+    async with AsyncClient() as client:
         response = await client.delete(FULL_URL + "1234567890")
         assert response.status_code == 200
         response = await client.get(FULL_URL + "1234567890")
@@ -100,7 +93,14 @@ async def test_delete_user_by_phone():
 
 @pytest.mark.asyncio
 async def test_put_user_registration():
-    async with httpx.AsyncClient() as client:
+    """
+    Simulates a registration flow
+
+    1. Create a user
+    2. Update the user with name
+    3. Update the user with email
+    """
+    async with AsyncClient() as client:
         response = await client.post(FULL_URL, json={"phone": "1234567890", "terms": True})
         assert response.status_code == 200
 
@@ -143,7 +143,14 @@ async def test_put_user_registration():
 
 @pytest.mark.asyncio
 async def test_put_user_flow():
-    async with httpx.AsyncClient() as client:
+    """
+    Simulates a flow
+
+    1. Create a user
+    2. Update the user
+    3. Cycle through all steps
+    """
+    async with AsyncClient() as client:
         response = await client.post(FULL_URL, json={"phone": "1234567890", "terms": True})
         assert response.status_code == 200
         user = response.json()

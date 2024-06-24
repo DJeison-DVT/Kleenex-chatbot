@@ -1,9 +1,10 @@
 from fastapi import FastAPI
-from starlette.middleware.cors import CORSMiddleware
+# from starlette.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 
 from app.core.config import settings
 from app.api.api import api_router
+
 
 @asynccontextmanager
 async def app_init(app: FastAPI):
@@ -26,6 +27,7 @@ app = FastAPI(
 #         allow_methods=["*"],
 #         allow_headers=["*"],
 #     )
+
 
 @app.get("/")
 async def read_root():

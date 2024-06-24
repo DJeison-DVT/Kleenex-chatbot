@@ -1,4 +1,5 @@
 from fastapi import APIRouter, HTTPException, Depends
+
 from app.schemas.user import User, UserCreation
 from app.api.deps import get_db
 from app.serializers.user import serialize_user, serialize_users

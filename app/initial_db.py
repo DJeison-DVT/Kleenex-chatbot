@@ -1,10 +1,10 @@
 import asyncio
 import logging
+from tenacity import after_log, before_log, retry, stop_after_attempt, wait_fixed
 
 from app.db.init_db import init_db
 from app.db.db import MongoDatabase
 
-from tenacity import after_log, before_log, retry, stop_after_attempt, wait_fixed
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -21,6 +21,7 @@ wait_seconds = 1
 )
 async def populate_db() -> None:
     await init_db(MongoDatabase())
+
 
 async def main() -> None:
     logger.info("Creating initial data")

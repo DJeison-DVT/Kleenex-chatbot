@@ -9,4 +9,3 @@ router = APIRouter()
 router.include_router(users.router, prefix="/users", tags=["users"])
 
 api_router = router
-
