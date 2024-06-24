@@ -2,7 +2,7 @@ import httpx
 import pytest
 from httpx import Response
 from app.core.config import settings
-from app.chatbot.user_flow import Steps
+from app.chatbot.steps import Steps
 
 SECTION = "/users/"
 FULL_URL = settings.BASE_URL + settings.API_STR + SECTION

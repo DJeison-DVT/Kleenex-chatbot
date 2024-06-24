@@ -1,4 +1,5 @@
 from pydantic import BaseModel, EmailStr, Field
+from app.chatbot.steps import Steps
 
 
 class UserCreation(BaseModel):
@@ -12,4 +13,4 @@ class User(BaseModel):
     terms: bool = False
     name: str | None = None
     email: EmailStr | None = None
-    flow_step: str = "onboarding"
+    flow_step: str = Steps.ONBOARDING.value
