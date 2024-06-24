@@ -136,3 +136,109 @@ async def test_update_participation_by_id():
 
         response = await client.delete(API_URL + USER_SECTION + PHONE)
         assert response.status_code == 204
+
+
+@pytest.mark.asyncio
+async def test_put_flow_prize():
+    async with AsyncClient() as client:
+        TICKET_URL = 'https://aws.com/123'
+        PARTICIPATION_NO = 123
+
+        response = await client.post(API_URL + USER_SECTION, json={"phone": PHONE, "terms": True})
+        assert response.status_code == 201
+
+        user = response.json()
+
+        response = await client.post(FULL_URL, json={"user": user})
+        assert response.status_code == 201
+
+        participation = response.json()
+
+        participation['ticket_url'] = TICKET_URL
+        participation['ticket_attempts'] = 1
+        response = await client.put(FULL_URL + participation["_id"], json=participation)
+        assert response.status_code == 200
+
+        participation = response.json()
+        assert participation['ticket_url'] == TICKET_URL
+        assert participation['ticket_attempts'] == 1
+        assert participation['status'] == 'INCOMPLETE'
+
+        participation['participationNumber'] = PARTICIPATION_NO
+        participation['status'] = 'COMPLETE'
+        participation['prizeType'] = 'digital'
+        response = await client.put(FULL_URL + participation["_id"], json=participation)
+        assert response.status_code == 200
+
+        participation = response.json()
+        assert participation['status'] == 'COMPLETE'
+        assert participation['prizeType'] == 'digital'
+        assert participation['participationNumber'] == PARTICIPATION_NO
+
+        response = await client.get(FULL_URL + participation["_id"])
+        assert response.status_code == 200
+
+        participation = response.json()
+        assert participation['status'] == 'COMPLETE'
+        assert participation['prizeType'] == 'digital'
+        assert participation['participationNumber'] == PARTICIPATION_NO
+        assert participation['ticket_url'] == TICKET_URL
+        assert participation['ticket_attempts'] == 1
+
+        response = await client.delete(FULL_URL + participation["_id"])
+        assert response.status_code == 204
+
+        response = await client.delete(API_URL + USER_SECTION + PHONE)
+        assert response.status_code == 204
+
+
+@pytest.mark.asyncio
+async def test_put_flow_no_prize():
+    async with AsyncClient() as client:
+        TICKET_URL = 'https://aws.com/123'
+
+        response = await client.post(API_URL + USER_SECTION, json={"phone": PHONE, "terms": True})
+        assert response.status_code == 201
+
+        user = response.json()
+
+        response = await client.post(FULL_URL, json={"user": user})
+        assert response.status_code == 201
+
+        participation = response.json()
+
+        participation['ticket_url'] = TICKET_URL
+        participation['ticket_attempts'] = 1
+        participation['status'] = 'INCOMPLETE'
+        response = await client.put(FULL_URL + participation["_id"], json=participation)
+        assert response.status_code == 200
+
+        participation = response.json()
+        assert participation['ticket_url'] == TICKET_URL
+        assert participation['ticket_attempts'] == 1
+        assert participation['status'] == 'INCOMPLETE'
+
+        participation['status'] = 'COMPLETE'
+        response = await client.put(FULL_URL + participation["_id"], json=participation)
+        assert response.status_code == 200
+
+        participation = response.json()
+        assert participation['status'] == 'COMPLETE'
+        assert participation['prizeType'] is None
+        assert participation['participationNumber'] == -1
+
+        response = await client.get(FULL_URL + participation["_id"])
+        assert response.status_code == 200
+
+        participation = response.json()
+        assert participation['status'] == 'COMPLETE'
+        assert participation['prizeType'] is None
+        assert participation['participationNumber'] == -1
+        assert participation['ticket_url'] == TICKET_URL
+        assert participation['ticket_attempts'] == 1
+
+        response = await client.delete(FULL_URL + participation["_id"])
+        assert response.status_code == 204
+
+        response = await client.delete(API_URL + USER_SECTION + PHONE)
+        assert response.status_code == 204
