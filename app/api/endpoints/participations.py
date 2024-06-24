@@ -10,6 +10,17 @@ from app.serializers.participation import serialize_participations, serialize_pa
 router = APIRouter()
 
 
+async def get_participation_by_id(id: str, db):
+    if not ObjectId.is_valid(id):
+        raise HTTPException(status_code=400, detail="Invalid ID")
+    id = ObjectId(id)
+    existing_participation = await db.participations.find_one({"_id": id})
+    if not existing_participation:
+        raise HTTPException(status_code=404, detail="Participation not found")
+
+    return existing_participation
+
+
 @router.get("/")
 async def fetch_all_participations(db=Depends(get_db), response_model=Participation):
     cursor = db.participations.find({})
@@ -21,12 +32,7 @@ async def fetch_all_participations(db=Depends(get_db), response_model=Participat
 
 @router.get("/{id}")
 async def fetch_participation_by_id(id: str, db=Depends(get_db), response_model=Participation):
-    if not ObjectId.is_valid(id):
-        raise HTTPException(status_code=400, detail="Invalid ID")
-    id = ObjectId(id)
-    participation = await db.participations.find_one({"_id": id})
-    if not participation:
-        raise HTTPException(status_code=404, detail="Participation not found")
+    participation = await get_participation_by_id(id, db)
     return serialize_participation(participation)
 
 
@@ -61,12 +67,8 @@ async def create_participation(
 
 @router.delete("/{id}")
 async def delete_participation_by_id(id: str, response: Response, db=Depends(get_db)):
-    if not ObjectId.is_valid(id):
-        raise HTTPException(status_code=400, detail="Invalid ID")
+    await get_participation_by_id(id, db)
     id = ObjectId(id)
-    participation = await db.participations.find_one({"_id": id})
-    if not participation:
-        raise HTTPException(status_code=404, detail="Participation not found")
     await db.participations.delete_one({"_id": id})
     response.status_code = 204
     return {"message": "Participation deleted successfully"}
