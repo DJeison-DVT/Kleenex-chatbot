@@ -1,14 +1,16 @@
 from functools import wraps
-from typing import Type
+from typing import Type, Dict
 
 
 def convert_id_to_str(cls: Type):
     def decorator(func):
         @wraps(func)
-        def wrapper(user_dict):
-            if '_id' in user_dict:
-                user_dict['_id'] = str(user_dict['_id'])
-                user = cls(**user_dict)
-            return func(user)
+        def wrapper(type_dict: Dict[str, str]):
+            if 'id' in type_dict:
+                type_dict['_id'] = str(type_dict.pop('id'))
+            if '_id' in type_dict:
+                type_dict['_id'] = str(type_dict['_id'])
+            class_type = cls(**type_dict)
+            return func(class_type)
         return wrapper
     return decorator

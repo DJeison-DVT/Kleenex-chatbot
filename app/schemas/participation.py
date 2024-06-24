@@ -44,6 +44,13 @@ class Status(str, Enum):
     APPROVED = "APPROVED"
 
 
+class ParticipationCreation(BaseModel):
+    user: User
+    ticket_attempts: int = 0
+    datetime: datetime
+    status: Status = Status.INCOMPLETE
+
+
 class Participation(BaseModel):
     id: str = Field(..., alias="_id")
     user: User

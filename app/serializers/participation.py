@@ -7,7 +7,7 @@ from app.serializers.user import serialize_user
 def serialize_participation(participation: Participation):
     return {
         "_id": str(participation.id),
-        "user": serialize_user(participation.user),
+        "user": participation.user,
         "ticket_url": participation.ticket_url,
         "ticket_attempts": participation.ticket_attempts,
         "participationNumber": participation.participationNumber,
