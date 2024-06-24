@@ -21,17 +21,17 @@ async def test_create_user():
         response = await client.get(FULL_URL + "1234567890")
         if response.status_code == 200:
             response = await client.delete(FULL_URL + "1234567890")
-            assert response.status_code == 200
+            assert response.status_code == 204
 
         response = await client.post(FULL_URL, json={"phone": "1234567890", "terms": True})
 
-        assert response.status_code == 200
+        assert response.status_code == 201
         response = response.json()
         assert response['phone'] == "1234567890"
         assert response['terms'] == True
 
         response = await client.delete(FULL_URL + "1234567890")
-        assert response.status_code == 200
+        assert response.status_code == 204
 
 
 @pytest.mark.asyncio
@@ -41,13 +41,13 @@ async def test_create_multiple_users():
     """
     async with AsyncClient() as client:
         response = await client.post(FULL_URL, json={"phone": "1234567890", "terms": True})
-        assert response.status_code == 200
+        assert response.status_code == 201
         response = await client.post(FULL_URL, json={"phone": "1234567890", "terms": True})
         assert response.status_code == 409
         response = await client.post(FULL_URL, json={"phone": "1234567891", "terms": True})
-        assert response.status_code == 200
+        assert response.status_code == 201
         response = await client.post(FULL_URL, json={"phone": "1234567892", "terms": True})
-        assert response.status_code == 200
+        assert response.status_code == 201
 
 
 @pytest.mark.asyncio
@@ -82,13 +82,13 @@ async def test_delete_user_by_phone():
     """
     async with AsyncClient() as client:
         response = await client.delete(FULL_URL + "1234567890")
-        assert response.status_code == 200
+        assert response.status_code == 204
         response = await client.get(FULL_URL + "1234567890")
         assert response.status_code == 404
         response = await client.delete(FULL_URL + "1234567891")
-        assert response.status_code == 200
+        assert response.status_code == 204
         response = await client.delete(FULL_URL + "1234567892")
-        assert response.status_code == 200
+        assert response.status_code == 204
 
 
 @pytest.mark.asyncio
@@ -102,7 +102,7 @@ async def test_put_user_registration():
     """
     async with AsyncClient() as client:
         response = await client.post(FULL_URL, json={"phone": "1234567890", "terms": True})
-        assert response.status_code == 200
+        assert response.status_code == 201
 
         user = response.json()
         user['name'] = "Jane Doe"
@@ -138,7 +138,7 @@ async def test_put_user_registration():
         assert user['flow_step'] == "onboarding"
 
         response = await client.delete(FULL_URL + "1234567890")
-        assert response.status_code == 200
+        assert response.status_code == 204
 
 
 @pytest.mark.asyncio
@@ -152,7 +152,7 @@ async def test_put_user_flow():
     """
     async with AsyncClient() as client:
         response = await client.post(FULL_URL, json={"phone": "1234567890", "terms": True})
-        assert response.status_code == 200
+        assert response.status_code == 201
         user = response.json()
         user['name'] = "Jane Doe"
         user['email'] = "jane.doe@gmail.com"
@@ -179,4 +179,4 @@ async def test_put_user_flow():
             assert user['flow_step'] == step
 
         response = await client.delete(FULL_URL + "1234567890")
-        assert response.status_code == 200
+        assert response.status_code == 204

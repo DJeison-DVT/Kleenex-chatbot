@@ -1,4 +1,7 @@
 from pydantic import BaseModel, EmailStr, Field
+from typing import Dict
+from datetime import date
+
 from app.chatbot.steps import Steps
 
 
@@ -14,3 +17,4 @@ class User(BaseModel):
     name: str | None = None
     email: EmailStr | None = None
     flow_step: str = Steps.ONBOARDING.value
+    submissions: Dict[date, int] = Field(default_factory=dict)

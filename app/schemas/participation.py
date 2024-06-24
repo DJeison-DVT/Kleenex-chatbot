@@ -1,6 +1,21 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from enum import Enum
 from datetime import datetime
+from bson import ObjectId
+
+from app.schemas.user import User
+
+
+class PyObjectId(ObjectId):
+    @classmethod
+    def __get_validators__(cls):
+        yield cls.validate
+
+    @classmethod
+    def validate(cls, v):
+        if not ObjectId.is_valid(v):
+            raise ValueError('Invalid ObjectId')
+        return ObjectId(v)
 
 
 class PrizeType(str, Enum):
@@ -29,11 +44,12 @@ class Status(str, Enum):
 
 
 class Participation(BaseModel):
-    phone_number: str
-    date: datetime
-    status: Status
-    photo_url: str
-    serial_number: str | None = None
-    priority_number: int | None = None
-    type: PrizeType | None = None
-    products: list[Products] | None = None
+    id: str = Field(..., alias="_id")
+    user: User
+    ticket_url: str | None = None
+    ticket_attempts: int = 0
+    participationNumber: int = -1
+    products: list[Products] = []
+    datetime: datetime
+    status: Status = Status.INCOMPLETE
+    prizeType: PrizeType | None = None

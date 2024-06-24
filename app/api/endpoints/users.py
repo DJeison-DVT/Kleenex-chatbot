@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, HTTPException, Depends, Response
 
 from app.schemas.user import User, UserCreation
 from app.api.deps import get_db
@@ -19,6 +19,7 @@ async def fetch_all_users(db=Depends(get_db), response_model=User):
 @router.post("/", response_model=User)
 async def create_user(
     user: UserCreation,
+    response: Response,
     db=Depends(get_db)
 ) -> User:
     phone = user.phone
@@ -34,15 +35,18 @@ async def create_user(
         raise HTTPException(status_code=500, detail=f"Error: {e}")
     new_user = await db.users.find_one({"_id": result.inserted_id})
 
+    response.status_code = 201
+
     return serialize_user(new_user)
 
 
 @router.delete("/{phone}")
-async def delete_user_by_phone(phone: str, db=Depends(get_db)):
+async def delete_user_by_phone(phone: str, response: Response, db=Depends(get_db)):
     user = await db.users.find_one({"phone": phone})
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
     await db.users.delete_one({"phone": phone})
+    response.status_code = 204
     return {"message": "User deleted successfully"}
 
 

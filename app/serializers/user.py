@@ -23,6 +23,7 @@ def serialize_user(user: User):
         "name": user.name if user.name else None,
         "email": user.email if user.email else None,
         "flow_step": user.flow_step,
+        "submissions": user.submissions if user.submissions else {},
     }
 
 
