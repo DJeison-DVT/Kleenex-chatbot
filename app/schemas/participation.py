@@ -7,18 +7,6 @@ from bson import ObjectId
 from app.schemas.user import User
 
 
-class PyObjectId(ObjectId):
-    @classmethod
-    def __get_validators__(cls):
-        yield cls.validate
-
-    @classmethod
-    def validate(cls, v):
-        if not ObjectId.is_valid(v):
-            raise ValueError('Invalid ObjectId')
-        return ObjectId(v)
-
-
 class PrizeType(str, Enum):
     digital = "digital"
     physical = "physical"
@@ -46,9 +34,6 @@ class Status(str, Enum):
 
 class ParticipationCreation(BaseModel):
     user: User
-    ticket_attempts: int = 0
-    datetime: datetime
-    status: Status = Status.INCOMPLETE
 
 
 class Participation(BaseModel):

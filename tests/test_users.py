@@ -8,10 +8,6 @@ SECTION = "/users/"
 FULL_URL = settings.BASE_URL + settings.API_STR + SECTION
 
 
-def URLBuilder(path: str) -> str:
-    return settings.API_STR + path
-
-
 @pytest.mark.asyncio
 async def test_create_user():
     """
