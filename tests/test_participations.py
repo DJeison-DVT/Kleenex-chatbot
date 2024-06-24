@@ -98,3 +98,41 @@ async def test_delete_participation_by_id():
         for user in users:
             response = await client.delete(API_URL + USER_SECTION + user["phone"])
             assert response.status_code == 204
+
+
+@pytest.mark.asyncio
+async def test_update_participation_by_id():
+    async with AsyncClient() as client:
+        response = await client.post(API_URL + USER_SECTION, json={"phone": PHONE, "terms": True})
+        assert response.status_code == 201
+
+        user = response.json()
+
+        response = await client.post(FULL_URL, json={"user": user})
+        assert response.status_code == 201
+
+        participation = response.json()
+        assert participation["status"] == "INCOMPLETE"
+        # valid datetime
+        assert datetime.fromisoformat(participation["datetime"])
+        assert participation["user"] == user
+        assert participation["ticket_url"] is None
+        assert participation["ticket_attempts"] == 0
+        assert participation["participationNumber"] == -1
+
+        # update participation
+        participation["status"] = "COMPLETE"
+        participation["ticket_url"] = "https://example.com"
+        response = await client.put(FULL_URL + participation["_id"], json=participation)
+        assert response.status_code == 200
+
+        participation = response.json()
+        assert participation["status"] == "COMPLETE"
+        assert participation["ticket_url"] == "https://example.com"
+
+        # clean up
+        response = await client.delete(FULL_URL + participation["_id"])
+        assert response.status_code == 204
+
+        response = await client.delete(API_URL + USER_SECTION + PHONE)
+        assert response.status_code == 204

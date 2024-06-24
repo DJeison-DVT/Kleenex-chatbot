@@ -46,3 +46,16 @@ class Participation(BaseModel):
     datetime: datetime
     status: Status = Status.INCOMPLETE
     prizeType: Optional[PrizeType] = None
+
+    def to_dict(self):
+        return {
+            "_id": self.id,
+            "user": self.user.to_dict(),
+            "ticket_url": self.ticket_url,
+            "ticket_attempts": self.ticket_attempts,
+            "participationNumber": self.participationNumber,
+            "products": self.products,
+            "datetime": self.datetime,
+            "status": self.status,
+            "prizeType": self.prizeType
+        }

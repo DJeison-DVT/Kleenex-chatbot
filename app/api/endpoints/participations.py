@@ -65,6 +65,27 @@ async def create_participation(
     return serialize_participation(new_participation)
 
 
+@router.put("/{id}")
+async def update_participation_by_id(
+    id: str,
+    participation: Participation,
+    response: Response,
+    db=Depends(get_db)
+):
+    await get_participation_by_id(id, db)
+    id = ObjectId(id)
+    new_participation = participation.to_dict()
+    new_participation.pop("_id", None)
+
+    try:
+        await db.participations.update_one({"_id": id}, {"$set": new_participation})
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error: {e}")
+
+    participation = await db.participations.find_one({"_id": id})
+    return serialize_participation(participation)
+
+
 @router.delete("/{id}")
 async def delete_participation_by_id(id: str, response: Response, db=Depends(get_db)):
     await get_participation_by_id(id, db)
