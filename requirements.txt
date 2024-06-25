@@ -7,3 +7,4 @@ coverage
 tenacity
 pydantic_settings
 pytest_asyncio
+twilio
