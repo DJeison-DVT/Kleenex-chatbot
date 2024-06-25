@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, Response, HTTPException, Query
 from typing import Optional
 from pymongo.errors import InvalidDocument
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from bson import ObjectId
 from pymongo import ASCENDING, DESCENDING
 
@@ -44,6 +44,21 @@ async def fetch_all_participations(
     async for participation in cursor:
         participations.append(participation)
     return serialize_participations(participations)
+
+
+@router.get("/count")
+async def count_participations(
+    date: Optional[datetime] = Query(
+        datetime.now(timezone.utc).date(), description="Filter participations by date"),
+    db=Depends(get_db)
+):
+    start_of_day = datetime(date.year, date.month,
+                            date.day, tzinfo=timezone.utc)
+    end_of_day = start_of_day + timedelta(days=1)
+    query = {"datetime": {"$gte": start_of_day, "$lt": end_of_day}}
+
+    count = await db.participations.count_documents(query)
+    return {"count": count}
 
 
 @router.get("/{id}")

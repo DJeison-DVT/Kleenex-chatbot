@@ -1,6 +1,6 @@
 import pytest
 from httpx import AsyncClient
-from datetime import datetime
+from datetime import datetime, timezone
 
 from app.core.config import settings
 from .test_users import SECTION as USER_SECTION
@@ -470,6 +470,35 @@ async def test_put_flow_no_prize():
         assert participation['ticket_url'] == TICKET_URL
         assert participation['ticket_attempts'] == 1
 
+        response = await client.delete(FULL_URL + participation["_id"])
+        assert response.status_code == 204
+
+        response = await client.delete(API_URL + USER_SECTION + PHONE)
+        assert response.status_code == 204
+
+
+@pytest.mark.asyncio
+async def test_count_participations_by_date():
+    async with AsyncClient() as client:
+        response = await client.post(API_URL + USER_SECTION, json={"phone": PHONE, "terms": True})
+        assert response.status_code == 201
+
+        user = response.json()
+
+        # Create a participation for today
+        response = await client.post(FULL_URL, json={"user": user})
+        assert response.status_code == 201
+        participation = response.json()
+
+        # Count participations for today
+        today_str = datetime.now(timezone.utc).date().isoformat()
+        response = await client.get(FULL_URL + "count", params={"date": today_str})
+        assert response.status_code == 200
+
+        count = response.json()
+        assert count["count"] >= 1
+
+        # Clean up
         response = await client.delete(FULL_URL + participation["_id"])
         assert response.status_code == 204
 
