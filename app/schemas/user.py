@@ -7,7 +7,6 @@ from app.chatbot.steps import Steps
 
 class UserCreation(BaseModel):
     phone: str
-    terms: bool = False
 
 
 class User(BaseModel):

@@ -31,12 +31,11 @@ async def create_user(
     db=Depends(get_db)
 ) -> User:
     phone = user.phone
-    terms = user.terms
 
     if not phone:
         raise HTTPException(status_code=400, detail="Phone number is required")
     try:
-        result = await db.users.insert_one({"phone": phone, "terms": terms, "flow_step": "onboarding"})
+        result = await db.users.insert_one({"phone": phone, "terms": False, "flow_step": "onboarding"})
     except Exception as e:
         if e.code == 11000:
             raise HTTPException(status_code=409, detail="User already exists")

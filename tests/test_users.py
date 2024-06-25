@@ -19,12 +19,12 @@ async def test_create_user():
             response = await client.delete(FULL_URL + "1234567890")
             assert response.status_code == 204
 
-        response = await client.post(FULL_URL, json={"phone": "1234567890", "terms": True})
+        response = await client.post(FULL_URL, json={"phone": "1234567890"})
 
         assert response.status_code == 201
         response = response.json()
         assert response['phone'] == "1234567890"
-        assert response['terms'] == True
+        assert response['terms'] == False
 
         response = await client.delete(FULL_URL + "1234567890")
         assert response.status_code == 204
@@ -36,13 +36,13 @@ async def test_create_multiple_users():
     creates multiple users 
     """
     async with AsyncClient() as client:
-        response = await client.post(FULL_URL, json={"phone": "1234567890", "terms": True})
+        response = await client.post(FULL_URL, json={"phone": "1234567890"})
         assert response.status_code == 201
-        response = await client.post(FULL_URL, json={"phone": "1234567890", "terms": True})
+        response = await client.post(FULL_URL, json={"phone": "1234567890"})
         assert response.status_code == 409
-        response = await client.post(FULL_URL, json={"phone": "1234567891", "terms": True})
+        response = await client.post(FULL_URL, json={"phone": "1234567891"})
         assert response.status_code == 201
-        response = await client.post(FULL_URL, json={"phone": "1234567892", "terms": True})
+        response = await client.post(FULL_URL, json={"phone": "1234567892"})
         assert response.status_code == 201
 
 
@@ -68,7 +68,7 @@ async def test_fetch_user_by_phone():
         assert response.status_code == 200
         response = response.json()
         assert response['phone'] == "1234567890"
-        assert response['terms'] == True
+        assert response['terms'] == False
 
 
 @pytest.mark.asyncio
@@ -97,11 +97,12 @@ async def test_put_user_registration():
     3. Update the user with email
     """
     async with AsyncClient() as client:
-        response = await client.post(FULL_URL, json={"phone": "1234567890", "terms": True})
+        response = await client.post(FULL_URL, json={"phone": "1234567890"})
         assert response.status_code == 201
 
         user = response.json()
         user['name'] = "Jane Doe"
+        user['terms'] = True
         user = {k: v for k, v in user.items() if v is not None}
 
         response = await client.put(FULL_URL + "1234567890", json=user)
@@ -147,7 +148,7 @@ async def test_put_user_flow():
     3. Cycle through all steps
     """
     async with AsyncClient() as client:
-        response = await client.post(FULL_URL, json={"phone": "1234567890", "terms": True})
+        response = await client.post(FULL_URL, json={"phone": "1234567890"})
         assert response.status_code == 201
         user = response.json()
         user['name'] = "Jane Doe"
@@ -157,7 +158,7 @@ async def test_put_user_flow():
         assert response.status_code == 200
         user = response.json()
         assert user['phone'] == "1234567890"
-        assert user['terms'] == True
+        assert user['terms'] == False
         assert user['name'] == "Jane Doe"
         assert user['email'] == "jane.doe@gmail.com"
 

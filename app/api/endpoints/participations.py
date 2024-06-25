@@ -1,7 +1,9 @@
-from fastapi import APIRouter, Depends, Response, HTTPException
+from fastapi import APIRouter, Depends, Response, HTTPException, Query
+from typing import Optional
 from pymongo.errors import InvalidDocument
-from datetime import datetime
+from datetime import datetime, timedelta
 from bson import ObjectId
+from pymongo import ASCENDING, DESCENDING
 
 from app.schemas.participation import Participation, ParticipationCreation
 from app.api.deps import get_db
@@ -22,8 +24,22 @@ async def get_participation_by_id(id: str, db):
 
 
 @router.get("/")
-async def fetch_all_participations(db=Depends(get_db), response_model=Participation):
-    cursor = db.participations.find({})
+async def fetch_all_participations(
+    limit: Optional[int] = Query(
+        10, description="Limit the number of participations returned"),
+    date: Optional[datetime] = Query(
+        None, description="Filter participations by date"),
+    db=Depends(get_db),
+    response_model=Participation
+):
+    query = {}
+    if date:
+        start_of_day = datetime(date.year, date.month, date.day)
+        end_of_day = start_of_day + timedelta(days=1)
+        query["datetime"] = {"$gte": start_of_day, "$lt": end_of_day}
+
+    cursor = db.participations.find(query).sort(
+        "datetime", ASCENDING).limit(limit)
     participations = []
     async for participation in cursor:
         participations.append(participation)
