@@ -1,5 +1,6 @@
 from fastapi import APIRouter
 
+from app.core.config import settings
 from app.api.endpoints import (
     users,
     participations
@@ -7,8 +8,10 @@ from app.api.endpoints import (
 
 router = APIRouter()
 
-router.include_router(users.router, prefix="/users", tags=["users"])
+
+router.include_router(
+    users.router, prefix=settings.USER_SECTION, tags=["users"])
 router.include_router(participations.router,
-                      prefix="/participations", tags=["participations"])
+                      prefix=settings.PARTICIPATION_SECTION, tags=["participations"])
 
 api_router = router

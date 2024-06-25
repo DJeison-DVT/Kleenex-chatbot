@@ -58,7 +58,6 @@ async def create_participation(
                 status_code=409, detail="Participation already exists")
         raise HTTPException(status_code=500, detail=f"Error: {e}")
     new_participation = await db.participations.find_one({"_id": result.inserted_id})
-    print(new_participation)
 
     response.status_code = 201
 

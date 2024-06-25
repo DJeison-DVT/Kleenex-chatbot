@@ -20,13 +20,17 @@ def get_env_path():
 
 class Settings(BaseSettings):
     API_STR: str = "/api"
-    PROJECT_NAME: str = "Kleenex Chatbot API"
-    MONGO_URI: str
-    MONGO_DATABASE: str
+    BASE_URL: str
+    USER_SECTION: str = "/users"
+    PARTICIPATION_SECTION: str = "/participations"
     BACKEND_CORS_ORIGINS: Annotated[
         list[AnyHttpUrl] | str, BeforeValidator(parse_cors)
     ] = []
-    BASE_URL: str
+    MONGO_URI: str
+    MONGO_DATABASE: str
+    PROJECT_NAME: str = "Kleenex Chatbot API"
+    TWILIO_ACCOUNT_SID: str
+    TWILIO_AUTH_TOKEN: str
 
     model_config = SettingsConfigDict(
         env_file='.env', env_file_encoding='utf-8')
