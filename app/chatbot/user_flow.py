@@ -1,133 +1,92 @@
 from typing import Dict, Optional
 from abc import ABC, abstractmethod
+from httpx import AsyncClient
 
 from app.schemas.user import User
+from app.chatbot.messages import Message, send_message
 from app.chatbot.steps import Steps
 
 
 class Transition(ABC):
     @abstractmethod
-    def execute(self, user: User, response: Optional[str] = None, **kwargs):
+    def execute(self, user: User, message: Optional[Message] = None, response: Optional[str] = None) -> str:
         pass
-
-    @abstractmethod
-    def get_next_step(self, result, user: User) -> str:
-        pass
-
-
-# Server transitions
-class ServerTransition(Transition):
-    @abstractmethod
-    def api_call(self, user: User, **kwargs):
-        pass
-
-    def execute(self, user: User, **kwargs):
-        response = self.api_call(user, **kwargs)
-        return response
-
-
-class MultimediaUploadTransition(ServerTransition):
-    def __init__(self, success_step: str, failure_step: str):
-        self.success_step = success_step
-        self.failure_step = failure_step
-
-    def api_call(self, user: User, **kwargs):
-        # TODO
-        # Simulate upload and return True if successful, False otherwise
-        return False  # Change this to the actual upload logic
-
-    def get_next_step(self, result, user: User):
-        return self.success_step if result else self.failure_step
 
 
 class ResponseDependentTransition(Transition):
-    def __init__(self, transitions: Dict[str, str]):
+    def __init__(self, transitions: Dict[str, str], message_template: str, format_args: Optional[Dict[str, str]] = None):
+        self.transitions = transitions
+        self.message_template = message_template
+        self.format_args = format_args
+
+    def execute(self, user, message: Message):
+        user_response = message.body_content.lower().strip()
+        next_step = self.transitions.get(user_response, user.flow_step)
+        return next_step
+
+
+class ResponseIndependentTransition(Transition):
+    def __init__(self, next_step: str, message_template: str, format_args: Optional[Dict[str, str]] = None):
+        self.next_step = next_step
+        self.message_template = message_template
+        self.format_args = format_args
+
+    def execute(self, user, message: Message):
+        return self.next_step
+
+
+class MultimediaUploadTransition(Transition):
+    def __init__(self, success_step: str, failure_step: str, message_template: str, format_args: Optional[Dict[str, str]] = None):
+        self.success_step = success_step
+        self.failure_step = failure_step
+        self.message_template = message_template
+        self.format_args = format_args
+
+    def execute(self, user, message: Message):
+        if message.num_media > 0:
+            return self.success_step
+        return self.failure_step
+
+
+class DashboardTransition(Transition):
+    def __init__(self, transitions: Dict[str, str], message_template: str, format_args: Optional[Dict[str, str]] = None):
+        self.transitions = transitions
+        self.message_template = message_template
+        self.format_args = format_args
+
+    def execute(self, user, response: str):
+        dashboard_response = response.body_content.lower().strip()
+        next_step = self.transitions.get(dashboard_response, user.flow_step)
+        return next_step
+
+
+class ServerTransition(Transition):
+    def __init__(self, transitions, message_template: str, format_args: Optional[Dict[str, str]] = None):
+        self.message_template = message_template
+        self.format_args = format_args
         self.transitions = transitions
 
-    def execute(self, user: User, response: Optional[str] = None, **kwargs):
-        return response
-
-    def get_next_step(self, result, user: User):
-        return self.transitions.get(result, None)
-
-
-class ResponseIndependentTransition(Transition):
-    def __init__(self, next_step: str):
-        self.next_step = next_step
-
-    def execute(self, user: User, **kwargs):
-        return ''
-
-    def get_next_step(self, result, user: User):
-        return self.next_step
+    def execute(self, user):
+        # api call and transition
+        if not self.transitions:
+            return None
+        api_response = True
+        next_step = self.transitions.get(api_response, user.flow_step)
+        return next_step
 
 
-class DashboardTransition(ServerTransition):
-    def __init__(self, end_step: str):
-        self.end_step = end_step
+class FlowManager:
+    def __init__(self, flow: Dict[Steps, Transition], user: User):
+        self.flow = flow
+        self.user = User(**user)
 
-    def api_call(self, user: User, **kwargs):
-        # TODO
-        # Simulate an API call to handle dashboard confirmation
-        return False
+    def update_flow(self, next_transition: str):
+        # api call and transition
+        pass
 
-    def get_next_step(self, result, user: User):
-        return self.end_step if result else None
+    def handle_message(self, client: AsyncClient, message: Message, body: str):
+        send_message(self.client, message, body)
 
-
-class ResponseIndependentTransition(Transition):
-    def __init__(self, next_step: str):
-        self.next_step = next_step
-
-    def execute(self, **kwargs):
-        return ''
-
-    def get_next_step(self, result):
-        return self.next_step
-
-
-class FlowStep:
-    def __init__(self, name: str, transition: Transition, is_end: bool = False):
-        self.name = name
-        self.is_end = is_end
-        self.transition = transition
-
-    def execute(self, *args, **kwargs):
-        return self.transition.execute(*args, **kwargs)
-
-    def get_next_step(self, result):
-        return self.transition.get_next_step(result)
-
-
-class FlowStep:
-    def __init__(self, name: str, transition: Transition, is_end: bool = False):
-        self.name = name
-        self.is_end = is_end
-        self.transition = transition
-
-    def execute(self, user: User, response: Optional[str] = None, **kwargs):
-        return self.transition.execute(user, response, **kwargs)
-
-    def get_next_step(self, result, user: User):
-        return self.transition.get_next_step(result, user)
-
-
-class UserFlowManager:
-    def __init__(self, user: User, steps: Dict[str, FlowStep]):
-        self.user = user
-        self.steps = steps
-        self.current_step = self.get_user_step()
-
-    def get_user_step(self):
-        return self.steps.get(self.user.current_step, self.steps[Steps.ONBOARDING.value])
-
-    def save_user_step(self, step_name: str):
-        self.user.current_step = step_name
-
-    def execute_step(self, response: Optional[str] = None, **kwargs):
-        step = self.current_step
-        result = step.execute(self.user, response, **kwargs)
-        next_step = step.get_next_step(result, self.user)
-        self.save_user_step(next_step)
-        self.current_step = self.steps.get(next_step, None)
-        return result
+    def execute(self, client: AsyncClient, message: Message):
+        transition = self.flow.get(self.user.flow_step, None)
+        print(f"Transition: {transition}")

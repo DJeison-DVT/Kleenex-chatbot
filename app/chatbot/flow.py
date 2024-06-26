@@ -1,77 +1,74 @@
 from app.chatbot.user_flow import *
+from app.chatbot.steps import Steps
+from app.chatbot.messages import messages
+
 INVALID_PHOTO_MAX_OPPORTUNITIES = 3
 DAILTY_PARTICIPAITONS = 5
 
 FLOW = {
-    Steps.ONBOARDING.value: FlowStep(
-        name=Steps.ONBOARDING.value,
-        transition=ResponseDependentTransition(
-            transitions={
-                'si acepto': Steps.ONBOARDING_PHOTO.value,
-                'no acepto': Steps.ONBOARDING_TERMS.value,
-            })),
-    Steps.ONBOARDING_TERMS.value: FlowStep(
-        name=Steps.ONBOARDING_TERMS.value,
-        transition=ResponseDependentTransition(
-            transitions={
-                'si acepto': Steps.ONBOARDING_PHOTO.value,
-            })),
-    Steps.ONBOARDING_PHOTO.value: FlowStep(
-        name=Steps.ONBOARDING_PHOTO.value,
-        transition=MultimediaUploadTransition(
-            success_step=Steps.ONBOARDING_NAME.value,
-            failure_step=Steps.ONBOARDING_INVALID_PHOTO.value)),
-    Steps.ONBOARDING_INVALID_PHOTO.value: FlowStep(
-        name=Steps.ONBOARDING_INVALID_PHOTO.value,
-        transition=MultimediaUploadTransition(
-            success_step=Steps.ONBOARDING_NAME.value,
-            failure_step=Steps.ONBOARDING_INVALID_PHOTO.value)),
-    Steps.ONBOARDING_NAME.value: FlowStep(
-        name=Steps.ONBOARDING_NAME.value,
-        transition=ResponseIndependentTransition(
-            next_step=Steps.ONBOARDING_EMAIL.value)),
-    Steps.ONBOARDING_EMAIL.value: FlowStep(
-        name=Steps.ONBOARDING_EMAIL.value,
-        transition=ResponseIndependentTransition(
-            next_step=Steps.ONBOARDING_CONFIRMATION.value)),
-    Steps.ONBOARDING_CONFIRMATION.value: FlowStep(
-        name=Steps.ONBOARDING_CONFIRMATION.value,
-        transition=ResponseDependentTransition(
-            transitions={
-                'confirmar': Steps.PRIORITY_NUMBER.value,
-                'editar': Steps.ONBOARDING_NAME.value,
-            })),
-    Steps.PRIORITY_NUMBER.value: FlowStep(
-        name=Steps.PRIORITY_NUMBER.value,
-        transition=DashboardTransition(
-            end_step=Steps.DASHBOARD_WAITING.value)),
-    Steps.DASHBOARD_WAITING.value: FlowStep(
-        name=Steps.DASHBOARD_WAITING.value,
-        transition=ResponseDependentTransition(
-            transitions={
-                'valid': Steps.DASHBOARD_CONFIRMATION.value,
-                'invalid': Steps.DASHBOARD_REJECTION.value,
-            })),
-    Steps.DASHBOARD_CONFIRMATION.value: FlowStep(
-        name=Steps.DASHBOARD_CONFIRMATION.value,
-        transition=ResponseIndependentTransition(
-            next_step=None)),
-    Steps.DASHBOARD_REJECTION.value: FlowStep(
-        name=Steps.DASHBOARD_REJECTION.value,
-        transition=ResponseIndependentTransition(
-            next_step=None)),
-    Steps.VALIDATE_PHOTO.value: FlowStep(
-        name=Steps.VALIDATE_PHOTO.value,
-        transition=MultimediaUploadTransition(
-            success_step=Steps.PRIORITY_NUMBER.value,
-            failure_step=Steps.INVALID_PHOTO.value)),
-    Steps.INVALID_PHOTO.value: FlowStep(
-        name=Steps.INVALID_PHOTO.value,
-        transition=MultimediaUploadTransition(
-            success_step=Steps.PRIORITY_NUMBER.value,
-            failure_step=Steps.INVALID_PHOTO.value))
+    Steps.ONBOARDING: ResponseDependentTransition(
+        transitions={
+            'si acepto': Steps.ONBOARDING_PHOTO,
+            'no acepto': Steps.ONBOARDING_TERMS,
+        },
+        message_template=messages[Steps.ONBOARDING]
+    ),
+    Steps.ONBOARDING_TERMS: ResponseDependentTransition(
+        transitions={
+            'si acepto': Steps.ONBOARDING_PHOTO,
+        },
+        message_template=messages[Steps.ONBOARDING_TERMS]
+    ),
+    Steps.ONBOARDING_PHOTO: MultimediaUploadTransition(
+        success_step=Steps.ONBOARDING_NAME,
+        failure_step=Steps.ONBOARDING_INVALID_PHOTO,
+        message_template=messages[Steps.ONBOARDING_PHOTO]
+    ),
+    Steps.ONBOARDING_INVALID_PHOTO: MultimediaUploadTransition(
+        success_step=Steps.ONBOARDING_NAME,
+        failure_step=Steps.ONBOARDING_INVALID_PHOTO,
+        message_template=messages[Steps.INVALID_PHOTO]
+    ),
+    Steps.ONBOARDING_NAME: ResponseIndependentTransition(
+        next_step=Steps.ONBOARDING_EMAIL,
+        message_template=messages[Steps.ONBOARDING_NAME]
+    ),
+    Steps.ONBOARDING_EMAIL: ResponseIndependentTransition(
+        next_step=Steps.ONBOARDING_CONFIRMATION,
+        message_template=messages[Steps.ONBOARDING_EMAIL]
+    ),
+    Steps.ONBOARDING_CONFIRMATION: ResponseDependentTransition(
+        transitions={
+            'confirmar': Steps.PRIORITY_NUMBER,
+            'editar': Steps.ONBOARDING_NAME,
+        },
+        message_template=messages[Steps.ONBOARDING_CONFIRMATION]
+    ),
+    Steps.PRIORITY_NUMBER: ServerTransition(
+        transitions={
+            True: Steps.DASHBOARD_WAITING,
+            False: Steps.NO_PRIZE,
+        },
+        message_template=messages[Steps.PRIORITY_NUMBER],
+        format_args={'participation_number': '1234'}
+    ),
+    Steps.NO_PRIZE: ServerTransition(
+        transitions=None,
+        message_template=messages[Steps.NO_PRIZE]
+    ),
+    Steps.DASHBOARD_WAITING: ResponseDependentTransition(
+        transitions={
+            'valid': Steps.DASHBOARD_CONFIRMATION,
+            'invalid': Steps.DASHBOARD_REJECTION,
+        },
+        message_template=messages[Steps.DASHBOARD_WAITING]
+    ),
+    Steps.DASHBOARD_CONFIRMATION: ResponseIndependentTransition(
+        next_step=None,
+        message_template=messages[Steps.DASHBOARD_CONFIRMATION]
+    ),
+    Steps.DASHBOARD_REJECTION: ResponseIndependentTransition(
+        next_step=None,
+        message_template=messages[Steps.DASHBOARD_REJECTION]
+    )
 }
-
-
-def get_user_flow(user: User) -> UserFlowManager:
-    return UserFlowManager(user, FLOW)

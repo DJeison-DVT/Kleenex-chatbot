@@ -31,6 +31,7 @@ class Settings(BaseSettings):
     PROJECT_NAME: str = "Kleenex Chatbot API"
     TWILIO_ACCOUNT_SID: str
     TWILIO_AUTH_TOKEN: str
+    TWILIO_PHONE_NUMBER: str
 
     model_config = SettingsConfigDict(
         env_file='.env', env_file_encoding='utf-8')
