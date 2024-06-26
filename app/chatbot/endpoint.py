@@ -8,44 +8,18 @@ from fastapi import APIRouter, Request, HTTPException, Response
 from app.core.config import settings
 from app.chatbot.messages import *
 from app.chatbot.flow import FLOW, FlowManager
+from app.helpers.users import get_current_ticket_number, get_user
 
 client = Client(settings.TWILIO_ACCOUNT_SID, settings.TWILIO_AUTH_TOKEN)
 
 router = APIRouter()
 
 
-async def get_current_ticket_number(client: AsyncClient):
-    try:
-        response = await client.get(
-            f"{settings.BASE_URL}{settings.API_STR}{settings.PARTICIPATION_SECTION}/count")
-        response.raise_for_status()
-    except Exception as e:
-        raise HTTPException(
-            status_code=500, detail=f"Failed to get current ticket number: {str(e)}")
-
-    count = response.json()
-    return count['count']
-
-
-async def get_user(client: AsyncClient, message):
-    print("getting user...")
-    endpoint = f"{settings.BASE_URL}{settings.API_STR}{settings.USER_SECTION}/{message.from_number}"
-    response = await client.get(endpoint)
-    if response.status_code == 404:
-        return None
-
-    if response.status_code != 200:
-        raise HTTPException(status_code=500, detail="Failed to fetch user")
-
-    user = response.json()
-    return user
-
-
-async def handle_user(client: AsyncClient, user, message):
+async def handle_user(httpx_client: AsyncClient, user, message):
     print("handling user...")
     flow_manager = FlowManager(FLOW, user)
 
-    flow_manager.execute(client, message)
+    await flow_manager.execute(client, httpx_client, message)
 
 
 async def handle_new_user(httpx_client: AsyncClient, message: Message):
@@ -75,7 +49,7 @@ async def webhook(request: Request, response: Response):
             raise AttributeError
 
         async with AsyncClient() as client:
-            user = await get_user(client, message)
+            user = await get_user(client, message.from_number)
             if user:
                 await handle_user(client, user, message)
             else:
