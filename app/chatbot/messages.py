@@ -103,7 +103,7 @@ messages = {
         "😫 Lo siento, has excedido el número de participaciones diarias autorizadas 📅, nos vemos mañana!!!"
     ),
     Steps.ONBOARDING_PHOTO: (
-        "Por favor envía una foto de tu ticket o factura 📸🧾 para iniciar tu participación en la "
+        "Por favor envía una foto de tu ticket 📸🧾 para iniciar tu participación en la "
         "promoción 'Kleenex contigo en cada historia' ❤️ debe ser clara y legible."
     ),
     Steps.ONBOARDING_NAME: (
@@ -117,7 +117,10 @@ messages = {
     Steps.ONBOARDING_CONFIRMATION: (
         "Muy bien. Estos son los datos que registraste:\n"
         "Nombre: {name}\n"
-        "Correo electrónico: {email}."
+        "Correo electrónico: {email}.\n"
+
+        "Confirmar ✅\n"
+        "Editar 📝"
     ),
     Steps.INVALID_PHOTO: (
         "😔 No pude leer correctamente tu ticket, por favor envía otra foto más clara y legible 🧾🤳"
