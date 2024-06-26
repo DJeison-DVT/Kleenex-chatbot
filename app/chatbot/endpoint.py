@@ -45,7 +45,7 @@ async def webhook(request: Request, response: Response):
         message = Message(body_bytes)
         print(
             f"Received message: {message.body_content}, from: {message.from_number}")
-        if not message.body_content or not message.from_number:
+        if not (message.body_content or message.num_media) or not message.from_number:
             raise AttributeError
 
         async with AsyncClient() as client:
