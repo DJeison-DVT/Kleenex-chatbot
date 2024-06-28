@@ -8,7 +8,7 @@ from fastapi import APIRouter, Request, HTTPException, Response
 from app.core.config import settings
 from app.chatbot.messages import *
 from app.chatbot.flow import FLOW, FlowManager
-from app.helpers.users import get_current_ticket_number, get_user
+from app.helpers.users import get_current_ticket_number, get_user, post_user
 
 client = Client(settings.TWILIO_ACCOUNT_SID, settings.TWILIO_AUTH_TOKEN)
 
@@ -22,17 +22,12 @@ async def handle_user(httpx_client: AsyncClient, user: User, message: Message):
 
 
 async def handle_new_user(httpx_client: AsyncClient, message: Message):
-    response = await httpx_client.post(f"{settings.BASE_URL}{settings.API_STR}{settings.USER_SECTION}/",
-                                       json={"phone": message.from_number})
-
-    if response.status_code != 201:
-        raise HTTPException(status_code=500, detail="Failed to create user")
-
+    user = await post_user(httpx_client, message.from_number)
     count = await get_current_ticket_number(httpx_client)
     send_message(
         client,
         messages[Steps.ONBOARDING].format(tickets_registered=count),
-        message
+        user
     )
 
 

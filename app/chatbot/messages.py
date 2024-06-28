@@ -56,24 +56,13 @@ class Message:
                     print(f"Failed to download media from {url}")
 
 
-def send_message(client, body: str, message: Message = None, user: User = None):
-    from_number = None
-    to_number = None
-
-    if not message and user:
-        from_number = user.phone
-        to_number = settings.TWILIO_WHATSAPP_NUMBER
-
-    else:
-        from_number = message.to_number
-        to_number = message.from_number
-
-    print(f"Sending message from {from_number} to {to_number}")
+def send_message(client, body: str, user: User):
+    print(f"Sending message from {user.phone} to {settings.TWILIO_WHATSAPP_NUMBER}")
     try:
         client.messages.create(
-            from_=from_number,
+            from_=user.phone,
             body=body,
-            to=to_number
+            to=settings.TWILIO_WHATSAPP_NUMBER
         )
     except Exception as e:
         print(f"Error: {e}")
