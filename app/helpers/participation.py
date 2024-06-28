@@ -5,6 +5,18 @@ from fastapi import HTTPException
 from app.core.config import settings
 from app.schemas.participation import Participation
 
+async def get_current_ticket_number(client: AsyncClient):
+    try:
+        response = await client.get(
+            f"{settings.BASE_URL}{settings.API_STR}{settings.PARTICIPATION_SECTION}/count")
+        response.raise_for_status()
+    except Exception as e:
+        raise HTTPException(
+            status_code=500, detail=f"Failed to get current ticket number: {str(e)}")
+
+    count = response.json()
+    return count['count']
+
 async def get_participation_by_phone(client: AsyncClient, phone: str):
     endpoint = f"{settings.BASE_URL}{settings.API_STR}{settings.PARTICIPATION_SECTION}/phone/{phone}"
     response = await client.get(endpoint)

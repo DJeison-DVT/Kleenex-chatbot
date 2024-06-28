@@ -57,86 +57,14 @@ class Message:
 
 
 def send_message(client, body: str, user: User):
-    print(f"Sending message from {user.phone} to {settings.TWILIO_WHATSAPP_NUMBER}")
+    print(f"Sending message from messaging service: {settings.TWILIO_MESSAGING_SERVICE_SID}\nto {user.phone}\nwith content_sid: {body}")
     try:
         client.messages.create(
-            from_=user.phone,
-            body=body,
-            to=settings.TWILIO_WHATSAPP_NUMBER
+            messaging_service_sid=settings.TWILIO_MESSAGING_SERVICE_SID,
+            content_sid=body,
+            to=user.phone
         )
     except Exception as e:
         print(f"Error: {e}")
         raise HTTPException(status_code=500, detail=f"Error: {e}")
 
-
-messages = {
-    "error": (
-        "😫 Lo siento, ocurrió un error inesperado. Por favor intenta más tarde o envíanos un correo a:"
-    ),
-    Steps.ONBOARDING: (
-        "👋Bienvenido a la promoción 'Kleenex contigo en cada historia' ❤️.\n"
-        "Recuerda que para participar tienes que ser mayor de 18 años ✅.\n"
-        "He leído 📖 y acepto el aviso de privacidad y términos y condiciones 🥸, puedes consultarlos en https://dmente.mx/kleenexcontigo 📃\n"
-        "Hasta el momento se han registrado {tickets_registered} tickets 🛒🥳\n\n"
-        "SI ACEPTO\n"
-        "NO ACEPTO"
-    ),
-    Steps.ONBOARDING_TERMS: (
-        "😫 Lo sentimos para poder participar es necesario aceptar "
-        "terminos y condiciónes y Aviso de Privacidad, puedes pulsar "
-        "'SI ACEPTO' ✅ para continuar\n\n"
-        "SI ACEPTO"
-    ),
-    "exceeded_participation": (
-        "😫 Lo siento, has excedido el número de participaciones diarias autorizadas 📅, nos vemos mañana!!!"
-    ),
-    Steps.ONBOARDING_PHOTO: (
-        "Por favor envía una foto de tu ticket 📸🧾 para iniciar tu participación en la "
-        "promoción 'Kleenex contigo en cada historia' ❤️ debe ser clara y legible."
-    ),
-    Steps.ONBOARDING_NAME: (
-        "Iniciemos el registro. Te solicitaré algunos datos por única vez ✍️.\n"
-        "¿Cuál es tu nombre completo? Sin abreviaturas.\n"
-        "(Ej. María Guadalupe Pérez López)\n\n"
-    ),
-    Steps.ONBOARDING_EMAIL: (
-        "¿Cuál es tu correo electrónico?\n\n"
-    ),
-    Steps.ONBOARDING_CONFIRMATION: (
-        "Muy bien. Estos son los datos que registraste:\n"
-        "Nombre: {name}\n"
-        "Correo electrónico: {email}.\n"
-
-        "Confirmar ✅\n"
-        "Editar 📝"
-    ),
-    Steps.INVALID_PHOTO: (
-        "😔 No pude leer correctamente tu ticket, por favor envía otra foto más clara y legible 🧾🤳"
-    ),
-    "processing_error": (
-        "🤯 No pudimos procesar tu ticket de compra, si tienes dudas por favor envíanos un correo a: promociones@dmente.mx"
-    ),
-    Steps.PRIORITY_NUMBER: "Por favor espera un momento, estamos validando tu ticket ⏳⏰",
-    Steps.NO_PRIZE: (
-        "Gracias por participar en la promoción 'Kleenex contigo en cada historia' ❤️\n"
-        "Tu número de participación es {participation_number}\n"
-        "Recuerda 👀 que mientras más tickets registres, más posibilidades tienes de ganar 🏆🥳\n"
-        "Consulta prelación y premios en: https://dmente.mx/kleenexcontigo"
-    ),
-    Steps.DASHBOARD_WAITING: (
-        "¡¡Felicidades!! 👍👊😃🥳🎁 Eres el posible ganador de {prize}. Tu\n"
-        "número de participación es {participation_number}. Vamos a validar tu ticket y nos\n"
-        "pondremos en contacto contigo en un lapso de 48 a 72hrs hábiles.\n"
-        "Gracias por registrarte con nosotros 🤩😃👏."
-    ),
-    Steps.DASHBOARD_REJECTION: (
-        "😔 Lo siento, tu ticket no cumple con la mecánica de participación.\n"
-        "Puedes consultar términos y condiciones en https://dmente.mx/kleenexcontigo\n"
-        "Si tienes dudas envíanos un correo a: promociones@dmente.mx"
-    ),
-    Steps.DASHBOARD_CONFIRMATION: (
-        "¡¡Felicidades!! 👍👊😃🥳🎁 Eres el ganador de un cupón digital con\n"
-        "valor de ${prize_value} MXN. Tu número de participación es {participation_number}. Para poder recibir tu\n"
-        "premio, entra en la siguiente enlace url {url}, con el siguiente código: {code}"
-    ),
-}

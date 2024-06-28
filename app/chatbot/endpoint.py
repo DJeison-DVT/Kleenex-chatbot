@@ -8,7 +8,8 @@ from fastapi import APIRouter, Request, HTTPException, Response
 from app.core.config import settings
 from app.chatbot.messages import *
 from app.chatbot.flow import FLOW, FlowManager
-from app.helpers.users import get_current_ticket_number, get_user, post_user
+from app.helpers.users import get_user, post_user
+from app.helpers.participation import get_current_ticket_number
 
 client = Client(settings.TWILIO_ACCOUNT_SID, settings.TWILIO_AUTH_TOKEN)
 
