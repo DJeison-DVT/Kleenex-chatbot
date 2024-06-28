@@ -16,3 +16,4 @@ class Steps(Enum):
     DASHBOARD_REJECTION = 'dashboard_rejection'
     VALIDATE_PHOTO = 'validate_photo'
     INVALID_PHOTO = 'invalid_photo'
+    NEW_PARTICIPATION = 'new_participation'

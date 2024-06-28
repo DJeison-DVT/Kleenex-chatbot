@@ -19,7 +19,6 @@ async def get_current_ticket_number(client: AsyncClient):
 
 
 async def get_user(client: AsyncClient, phone: str):
-    print("getting user...")
     endpoint = f"{settings.BASE_URL}{settings.API_STR}{settings.USER_SECTION}/{phone}"
     response = await client.get(endpoint)
     if response.status_code == 404:
@@ -29,7 +28,9 @@ async def get_user(client: AsyncClient, phone: str):
         raise HTTPException(status_code=500, detail="Failed to fetch user")
 
     user = response.json()
-    return user
+    if not user:
+        return None
+    return User(**user)
 
 
 async def update_user(client: AsyncClient, user: User):
@@ -37,3 +38,5 @@ async def update_user(client: AsyncClient, user: User):
     response = await client.put(endpoint, json=user.to_dict())
     if response.status_code != 200:
         raise HTTPException(status_code=500, detail="Failed to update user")
+    user_dict = response.json()
+    return User(**user_dict)

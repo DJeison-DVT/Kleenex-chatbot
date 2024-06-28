@@ -15,15 +15,13 @@ client = Client(settings.TWILIO_ACCOUNT_SID, settings.TWILIO_AUTH_TOKEN)
 router = APIRouter()
 
 
-async def handle_user(httpx_client: AsyncClient, user, message):
-    print("handling user...")
+async def handle_user(httpx_client: AsyncClient, user: User, message: Message):
+    print("handling user")
     flow_manager = FlowManager(FLOW, user)
-
     await flow_manager.execute(client, httpx_client, message)
 
 
 async def handle_new_user(httpx_client: AsyncClient, message: Message):
-    print(f"New user: {message.from_number}")
     response = await httpx_client.post(f"{settings.BASE_URL}{settings.API_STR}{settings.USER_SECTION}/",
                                        json={"phone": message.from_number})
 

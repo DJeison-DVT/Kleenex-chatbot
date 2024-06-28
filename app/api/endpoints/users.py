@@ -36,6 +36,8 @@ async def create_user(
         raise HTTPException(status_code=400, detail="Phone number is required")
     try:
         result = await db.users.insert_one({"phone": phone, "terms": False, "flow_step": "onboarding"})
+    except AttributeError as e:
+        raise HTTPException(status_code=500, detail=f"Error: {e}")
     except Exception as e:
         if e.code == 11000:
             raise HTTPException(status_code=409, detail="User already exists")

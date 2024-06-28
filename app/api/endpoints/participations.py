@@ -22,6 +22,13 @@ async def get_participation_by_id(id: str, db):
 
     return existing_participation
 
+async def get_participation_by_phone(phone: str, db):
+    existing_participation = await db.participations.find_one({"phone": phone})
+    if not existing_participation:
+        raise HTTPException(status_code=404, detail="Participation not found")
+
+    return existing_participation
+
 
 @router.get("/")
 async def fetch_all_participations(
@@ -64,6 +71,11 @@ async def count_participations(
 @router.get("/{id}")
 async def fetch_participation_by_id(id: str, db=Depends(get_db), response_model=Participation):
     participation = await get_participation_by_id(id, db)
+    return serialize_participation(participation)
+
+@router.get("/phone/{phone}")
+async def fetch_participation_by_phone(phone: str, db=Depends(get_db), response_model=Participation):
+    participation = await get_participation_by_phone(phone, db)
     return serialize_participation(participation)
 
 

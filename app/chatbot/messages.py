@@ -60,7 +60,6 @@ def send_message(client, body: str, message: Message = None, user: User = None):
     from_number = None
     to_number = None
 
-    print(user, message)
     if not message and user:
         from_number = user.phone
         to_number = settings.TWILIO_WHATSAPP_NUMBER
