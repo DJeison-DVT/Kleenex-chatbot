@@ -8,17 +8,26 @@ from fastapi import APIRouter, Request, HTTPException, Response
 from app.core.config import settings
 from app.chatbot.messages import *
 from app.chatbot.flow import FLOW, FlowManager
+from app.schemas.participation import Status, Participation
 from app.helpers.users import get_user, post_user
-from app.helpers.participation import get_current_ticket_number
+from app.helpers.participation import get_current_ticket_number, get_participation, create_participation
 
 client = Client(settings.TWILIO_ACCOUNT_SID, settings.TWILIO_AUTH_TOKEN)
 
 router = APIRouter()
 
+async def get_current_participation(client: AsyncClient, user: User) -> Participation:
+    participations = await get_participation(client, phone=user.phone, status=Status.INCOMPLETE.value)
 
-async def handle_user(httpx_client: AsyncClient, user: User, message: Message):
-    print("handling user")
-    flow_manager = FlowManager(FLOW, user)
+    if isinstance(participations, list):
+        participation = participations[0] if participations else None
+    if not participation:
+        participation = await create_participation(client, user)
+
+    return participation
+
+async def handle_user(httpx_client: AsyncClient, user: User, participation: Participation, message: Message):
+    flow_manager = FlowManager(FLOW, user, participation)
     await flow_manager.execute(client, httpx_client, message)
 
 
@@ -46,7 +55,8 @@ async def webhook(request: Request, response: Response):
         async with AsyncClient() as client:
             user = await get_user(client, message.from_number)
             if user:
-                await handle_user(client, user, message)
+                participation = await get_current_participation(client, user)
+                await handle_user(client, user, participation, message)
             else:
                 await handle_new_user(client, message)
         print("ending...")

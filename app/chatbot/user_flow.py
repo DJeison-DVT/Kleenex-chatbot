@@ -87,7 +87,7 @@ class ResponseDependentTransition(WhatsAppTransition):
         
         if next_step == user.flow_step:
             message.body_content = None
-        return next_step
+        return Steps(next_step)
 
 
 class ResponseIndependentTransition(WhatsAppTransition):
@@ -139,11 +139,12 @@ class ServerTransition(Transition):
 
 
 class FlowManager:
-    def __init__(self, flow: Dict[Steps, Transition], user: User):
+    def __init__(self, flow: Dict[Steps, Transition], user: User, participation: Participation):
         self.flow = flow
         self.user = user
+        self.participation = participation
 
-    async def update_user_flow(self, httpx_client: AsyncClient, next_step: Steps):
+    async def update_user_flow(self, httpx_client: AsyncClient, next_step: str):
         self.user.flow_step = next_step.value
         await update_user(httpx_client, self.user)
 
@@ -161,9 +162,8 @@ class FlowManager:
                         args[str(count)] = f"{self.user.__getattribute__(param)}"
                     elif obj == "other":
                         if param == "current_participations":
-                            count = await get_current_ticket_number(httpx_client)
-                            args[str(count)] = str(count)
-                            print("current participations:", args[str(count)])
+                            ticket_count = await get_current_ticket_number(httpx_client)
+                            args[str(count)] = str(ticket_count)
                     else:
                         args[str(count)] = f"{param}"
                     count += 1
@@ -183,6 +183,7 @@ class FlowManager:
                 self.user = object
 
     async def execute(self, client: Client, httpx_client: AsyncClient, message: Optional[Message] = None, response: Optional[str] = None):
+        print("User step:", self.user.flow_step)
         step = Steps(self.user.flow_step)
         print(step)
 
@@ -195,6 +196,7 @@ class FlowManager:
         if isinstance(transition, WhatsAppTransition):
             if message:
                 print("handling message")
+                print("current participation", self.participation)
                 next_step = transition.execute(self.user, message)
                 print("Uploading:", transition.upload_params, message.body_content)
                 if transition.upload_params:

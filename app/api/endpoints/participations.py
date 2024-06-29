@@ -5,7 +5,7 @@ from datetime import datetime, timedelta, timezone
 from bson import ObjectId
 from pymongo import ASCENDING, DESCENDING
 
-from app.schemas.participation import Participation, ParticipationCreation
+from app.schemas.participation import Participation, ParticipationCreation, Status
 from app.api.deps import get_db
 from app.serializers.participation import serialize_participations, serialize_participation
 
@@ -38,6 +38,8 @@ async def fetch_all_participations(
         None, description="Filter participations by date"),
     phone: Optional[str] = Query(
         None, description="Filter participations by phone number"),
+    status: Optional[str] = Query(
+        None, description="Filter participations by status"),
     db=Depends(get_db),
     response_model=Participation
 ):
@@ -49,7 +51,10 @@ async def fetch_all_participations(
         query["datetime"] = {"$gte": start_of_day, "$lt": end_of_day}
 
     if phone:
-        query["phone"] = phone
+        query["user.phone"] = phone
+
+    if status:
+        query["status"] = status
 
     cursor = db.participations.find(query).sort(
         "datetime", ASCENDING).limit(limit)
@@ -68,7 +73,10 @@ async def count_participations(
     start_of_day = datetime(date.year, date.month,
                             date.day, tzinfo=timezone.utc)
     end_of_day = start_of_day + timedelta(days=1)
-    query = {"datetime": {"$gte": start_of_day, "$lt": end_of_day}}
+    query = {
+        "datetime": {"$gte": start_of_day, "$lt": end_of_day},
+        "status": {"$ne": Status.INCOMPLETE.value}
+    }
 
     count = await db.participations.count_documents(query)
     return {"count": count}
@@ -92,7 +100,7 @@ async def create_participation(
         raise HTTPException(
             status_code=400, detail="User is required")
     try:
-        result = await db.participations.insert_one({"user": user, "datetime": datetime.now()})
+        result = await db.participations.insert_one({"user": user, "datetime": datetime.now(), "status": Status.INCOMPLETE.value})
     except InvalidDocument as e:
         raise HTTPException(
             status_code=400, detail="Invalid participation data")
