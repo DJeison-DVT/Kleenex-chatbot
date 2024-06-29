@@ -27,8 +27,9 @@ async def handle_new_user(httpx_client: AsyncClient, message: Message):
     count = await get_current_ticket_number(httpx_client)
     send_message(
         client,
-        messages[Steps.ONBOARDING].format(tickets_registered=count),
-        user
+        FLOW[Steps.ONBOARDING].message_template,
+        user,
+        {"1": str(count)}
     )
 
 

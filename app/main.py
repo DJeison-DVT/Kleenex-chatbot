@@ -17,6 +17,7 @@ async def app_init(app: FastAPI):
 app = FastAPI(
     title=settings.PROJECT_NAME,
     lifespan=app_init,
+    debug=settings.DEBUG,
 )
 
 app.add_middleware(

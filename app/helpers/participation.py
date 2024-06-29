@@ -6,13 +6,12 @@ from app.core.config import settings
 from app.schemas.participation import Participation
 
 async def get_current_ticket_number(client: AsyncClient):
+    endpoint = f"{settings.BASE_URL}{settings.API_STR}{settings.PARTICIPATION_SECTION}/count"
     try:
-        response = await client.get(
-            f"{settings.BASE_URL}{settings.API_STR}{settings.PARTICIPATION_SECTION}/count")
-        response.raise_for_status()
+        response = await client.get(endpoint)
     except Exception as e:
-        raise HTTPException(
-            status_code=500, detail=f"Failed to get current ticket number: {str(e)}")
+        print(f"Failed to get current ticket number: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to get current ticket number: {str(e)}")
 
     count = response.json()
     return count['count']

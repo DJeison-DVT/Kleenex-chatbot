@@ -1,5 +1,6 @@
 import os
 import urllib.parse
+import json
 import requests
 from fastapi import HTTPException
 from httpx import AsyncClient
@@ -56,12 +57,14 @@ class Message:
                     print(f"Failed to download media from {url}")
 
 
-def send_message(client, body: str, user: User):
+def send_message(client, body: str, user: User, format_args: dict = {}):
     print(f"Sending message from messaging service: {settings.TWILIO_MESSAGING_SERVICE_SID}\nto {user.phone}\nwith content_sid: {body}")
+    print(f"Format args: {format_args}")
     try:
         client.messages.create(
             messaging_service_sid=settings.TWILIO_MESSAGING_SERVICE_SID,
             content_sid=body,
+            content_variables=json.dumps(format_args) if format_args else None,
             to=user.phone
         )
     except Exception as e:

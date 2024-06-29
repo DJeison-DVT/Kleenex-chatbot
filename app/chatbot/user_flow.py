@@ -11,7 +11,7 @@ from app.schemas.participation import Participation
 from app.chatbot.messages import Message, send_message
 from app.chatbot.steps import Steps
 from app.helpers.users import update_user, get_user
-from app.helpers.participation import get_participation_by_phone, update_participation
+from app.helpers.participation import get_current_ticket_number, get_participation_by_phone, update_participation
 
 class ClassMapping:
     def __init__(self, cls: List[Tuple[object, str]]):
@@ -24,6 +24,9 @@ class ClassMapping:
 
     def get(self, obj):
         return self.map[obj]
+    
+    def available(self):
+        return self.map.keys()
 
 
 class Transition(ABC):
@@ -130,6 +133,7 @@ class ServerTransition(Transition):
         if not self.transitions:
             return None
         api_response = True  # Simulated API response
+        print("sending api call to:", self.api_endpoint)
         next_step = self.transitions.get(api_response, user.flow_step)
         return next_step
 
@@ -143,9 +147,31 @@ class FlowManager:
         self.user.flow_step = next_step.value
         await update_user(httpx_client, self.user)
 
-    def handle_message(self, client: Client, body: str):
+    async def handle_message(self, client: Client, httpx_client: AsyncClient, transition: Transition):
+        print("Current transition", transition)
+        body = transition.get_template()
+        format_args = transition.format_args
+        if format_args:
+            count = 1
+            args = {}
+            objects = format_args.available()
+            for obj in objects:
+                for param in format_args.get(obj):
+                    if obj == User:
+                        args[str(count)] = f"{self.user.__getattribute__(param)}"
+                    elif obj == "other":
+                        if param == "current_participations":
+                            count = await get_current_ticket_number(httpx_client)
+                            args[str(count)] = str(count)
+                            print("current participations:", args[str(count)])
+                    else:
+                        args[str(count)] = f"{param}"
+                    count += 1
+            
+            format_args = args
+
         try:
-            send_message(client, body, self.user)
+            send_message(client, body, self.user, format_args)
         except Exception as e:
             print(f"Failed to send message: {str(e)}")
 
@@ -186,9 +212,9 @@ class FlowManager:
             print("Handling server transition")
             next_step = transition.execute(self.user)
             await self.update_user_flow(httpx_client, next_step)
-            self.handle_message(client, transition.get_template())
+            await self.handle_message(client, httpx_client, transition)
             await self.execute(client, httpx_client, response=next_step)
         else:
             print("Handling normal transition")
-            self.handle_message(client, transition.get_template())
+            await self.handle_message(client, httpx_client, transition)
             await self.update_user_flow(httpx_client, next_step)
