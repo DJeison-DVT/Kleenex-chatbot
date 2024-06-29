@@ -17,7 +17,7 @@ async def get_current_ticket_number(client: AsyncClient):
     return count['count']
 
 async def get_participation_by_phone(client: AsyncClient, phone: str):
-    endpoint = f"{settings.BASE_URL}{settings.API_STR}{settings.PARTICIPATION_SECTION}/phone/{phone}"
+    endpoint = f"{settings.BASE_URL}{settings.API_STR}{settings.PARTICIPATION_SECTION}/?phone={phone}"
     response = await client.get(endpoint)
 
     if response.status_code == 404:

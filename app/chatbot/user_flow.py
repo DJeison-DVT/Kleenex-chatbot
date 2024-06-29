@@ -116,7 +116,7 @@ class DashboardTransition(Transition):
         super().__init__(message_template, format_args, upload_params)
         self.transitions = transitions
 
-    def execute(self, user: User, response: Message):
+    def execute(self, user: User, response: str):
         dashboard_response = response.body_content.lower().strip()
         next_step = self.transitions.get(
             dashboard_response, "new_participation")

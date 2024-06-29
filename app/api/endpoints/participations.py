@@ -36,14 +36,20 @@ async def fetch_all_participations(
         10, description="Limit the number of participations returned"),
     date: Optional[datetime] = Query(
         None, description="Filter participations by date"),
+    phone: Optional[str] = Query(
+        None, description="Filter participations by phone number"),
     db=Depends(get_db),
     response_model=Participation
 ):
     query = {}
+
     if date:
         start_of_day = datetime(date.year, date.month, date.day)
         end_of_day = start_of_day + timedelta(days=1)
         query["datetime"] = {"$gte": start_of_day, "$lt": end_of_day}
+
+    if phone:
+        query["phone"] = phone
 
     cursor = db.participations.find(query).sort(
         "datetime", ASCENDING).limit(limit)
@@ -71,11 +77,6 @@ async def count_participations(
 @router.get("/{id}")
 async def fetch_participation_by_id(id: str, db=Depends(get_db), response_model=Participation):
     participation = await get_participation_by_id(id, db)
-    return serialize_participation(participation)
-
-@router.get("/phone/{phone}")
-async def fetch_participation_by_phone(phone: str, db=Depends(get_db), response_model=Participation):
-    participation = await get_participation_by_phone(phone, db)
     return serialize_participation(participation)
 
 
