@@ -2,6 +2,7 @@ import pytest
 from httpx import AsyncClient
 from datetime import datetime, timezone
 
+from app.schemas.participation import Status
 from app.core.config import settings
 from .test_users import SECTION as USER_SECTION
 
@@ -489,6 +490,10 @@ async def test_count_participations_by_date():
         response = await client.post(FULL_URL, json={"user": user})
         assert response.status_code == 201
         participation = response.json()
+
+        participation['status'] = Status.APPROVED.value
+        response = await client.put(FULL_URL + participation["_id"], json=participation)
+        assert response.status_code == 200
 
         # Count participations for today
         today_str = datetime.now(timezone.utc).date().isoformat()
