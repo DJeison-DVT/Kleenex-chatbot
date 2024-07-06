@@ -1,10 +1,14 @@
 from fastapi import FastAPI
 from starlette.middleware.cors import CORSMiddleware
+from dotenv import load_dotenv
 from contextlib import asynccontextmanager
 
 from app.core.config import settings
 from app.api.api import api_router
 from app.chatbot.endpoint import router as chatbot_router
+
+
+load_dotenv()
 
 
 @asynccontextmanager

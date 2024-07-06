@@ -14,7 +14,6 @@ def parse_cors(v: Any) -> list[str] | str:
 
 def get_env_path():
     path = Path(__file__).resolve().parent.parent.parent / ".env"
-    print(path)
     return path
 
 
@@ -37,5 +36,6 @@ class Settings(BaseSettings):
         env_file='.env', env_file_encoding='utf-8')
 
     DEBUG: bool = False
+
 
 settings = Settings()

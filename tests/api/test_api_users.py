@@ -10,9 +10,6 @@ FULL_URL = settings.BASE_URL + settings.API_STR + SECTION
 
 @pytest.mark.asyncio
 async def test_create_user():
-    """
-    clears the user if it exists, creates a new user, and deletes the user
-    """
     async with AsyncClient() as client:
         response = await client.get(FULL_URL + "1234567890")
         if response.status_code == 200:
@@ -55,7 +52,18 @@ async def test_fetch_all_users():
         response = await client.get(FULL_URL)
         assert response.status_code == 200
         response = response.json()
-        assert len(response) == 3
+
+        length = len(response)
+
+        response = await client.post(FULL_URL, json={"phone": "1234567899"})
+        assert response.status_code == 201
+
+        response = await client.get(FULL_URL)
+        assert response.status_code == 200
+        response = response.json()
+        assert len(response) == length + 1
+
+        response = await client.delete(FULL_URL + "1234567899")
 
 
 @pytest.mark.asyncio
