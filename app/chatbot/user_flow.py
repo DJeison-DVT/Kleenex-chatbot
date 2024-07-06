@@ -1,141 +1,49 @@
-import re
-from typing import Dict, Optional, Tuple, List
-from abc import ABC, abstractmethod
-from twilio.rest import Client
-from fastapi import HTTPException
-from httpx import AsyncClient
-from collections import defaultdict
+from typing import Dict, Optional
 
 from app.schemas.user import User
-from app.schemas.participation import Participation
+from app.schemas.participation import Participation, Status
 from app.chatbot.messages import Message, send_message
 from app.chatbot.steps import Steps
-from app.helpers.users import update_user, get_user
-from app.helpers.participation import get_current_ticket_number, get_participation_by_phone, update_participation
-
-class ClassMapping:
-    def __init__(self, cls: List[Tuple[object, str]]):
-        self.map = defaultdict(list)
-        for obj, name in cls:
-            if obj:
-                self.map[obj].append(name)
-            else:
-                self.map["other"].append(name)
-
-    def get(self, obj):
-        return self.map[obj]
-    
-    def available(self):
-        return self.map.keys()
+from app.core.services.users import update_user_by_phone, create_user, fetch_user_by_phone
+from app.core.services.participations import count_participations, ParticipationCreation, create_participation, fetch_participations
+from app.chatbot.transitions import Transition, WhatsAppTransition, DashboardTransition, ServerTransition
+from app.chatbot.flow import FLOW
 
 
-class Transition(ABC):
-    def __init__(self, message_template: str, format_args: Optional[ClassMapping] = None, upload_params: Optional[ClassMapping] = None):
-        self.message_template = message_template
-        self.format_args = format_args
-        self.upload_params = upload_params
+async def get_current_participation(user: User) -> Participation:
+    participations = await fetch_participations(phone=user.phone, status=Status.INCOMPLETE.value)
 
-    @abstractmethod
-    def execute(self, user: User, message: Optional[Message] = None, response: Optional[str] = None) -> str:
-        pass
+    if isinstance(participations, list):
+        participation = participations[0] if participations else None
+    if not participation:
+        new_participation = ParticipationCreation(user=user)
+        participation = await create_participation(new_participation)
 
-    def get_template(self) -> str:
-        return self.message_template
-
-    async def save_upload_params(self, client: AsyncClient, message: Optional[Message] = None, response: Optional[str] = None):
-        user_phone = message.from_number if message else response.from_number
-        print("uploading...")
-        
-        for obj, params in self.upload_params.map.items():
-            if obj == User and message.body_content:
-                for param in params:
-                    print(f"Saving {obj} with {param} as {message.body_content}")
-                    user = await get_user(client, user_phone)
-                    print(user)
-                    print("changing:", param, "to:", message.body_content)
-                    setattr(user, param, message.body_content)
-                    user = await update_user(client, user)
-                    return user
-            elif obj == Participation and message.body_content:
-                for param in params:
-                    participation = await get_participation_by_phone(client, user_phone)
-                    setattr(participation, param, message.body_content)
-                    await update_participation(client, participation)
-            else:
-                for param in params:
-                    print(f"Save param: {param}")
+    return participation
 
 
-class WhatsAppTransition(Transition):
-    def __init__(self, message_template: str, format_args: Optional[ClassMapping] = None, upload_params: Optional[ClassMapping] = None):
-        super().__init__(message_template, format_args, upload_params)
+async def handle_user(user: User, participation: Participation, message: Message):
+    flow_manager = FlowManager(FLOW, user, participation)
+    await flow_manager.execute(message)
 
 
-class ResponseDependentTransition(WhatsAppTransition):
-    def __init__(self, transitions: Dict[str, str], message_template: str, format_args: Optional[ClassMapping] = None, upload_params: Optional[ClassMapping] = None):
-        super().__init__(message_template, format_args, upload_params)
-        self.transitions = transitions
-
-    def execute(self, user: User, message: Message):
-        user_response = re.sub(r'[^\x00-\x7F]+', '', message.body_content).lower().strip()
-
-        next_step = self.transitions.get(user_response, user.flow_step)
-        if user_response == "si acepto":
-            message.body_content = True
-        elif user_response == "no acepto":
-            message.body_content = False
-        
-        if next_step == user.flow_step:
-            message.body_content = None
-        return Steps(next_step)
+async def handle_new_user(message: Message):
+    user = await create_user(message.from_number)
+    count = await count_participations()
+    send_message(
+        FLOW[Steps.ONBOARDING].message_template,
+        user,
+        {"1": str(count)}
+    )
 
 
-class ResponseIndependentTransition(WhatsAppTransition):
-    def __init__(self, next_step: str, message_template: str, format_args: Optional[ClassMapping] = None, upload_params: Optional[ClassMapping] = None):
-        super().__init__(message_template, format_args, upload_params)
-        self.next_step = next_step
-
-    def execute(self, user: User, message: Message):
-        return self.next_step
-
-
-class MultimediaUploadTransition(WhatsAppTransition):
-    def __init__(self, success_step: str, failure_step: str, message_template: str, format_args: Optional[ClassMapping] = None, upload_params: Optional[ClassMapping] = None):
-        super().__init__(message_template, format_args, upload_params)
-        self.success_step = success_step
-        self.failure_step = failure_step
-
-    def execute(self, user: User, message: Message):
-        if message.num_media > 0:
-            return self.success_step
-        return self.failure_step
-
-
-class DashboardTransition(Transition):
-    def __init__(self, message_template: str, transitions: Optional[Dict[str, str]] = None,  format_args: Optional[ClassMapping] = None, upload_params: Optional[ClassMapping] = None):
-        super().__init__(message_template, format_args, upload_params)
-        self.transitions = transitions
-
-    def execute(self, user: User, response: str):
-        dashboard_response = response.body_content.lower().strip()
-        next_step = self.transitions.get(
-            dashboard_response, "new_participation")
-        return next_step
-
-
-class ServerTransition(Transition):
-    def __init__(self, transitions: Dict[bool, str], message_template: str, api_endpoint: Optional[str] = None, format_args: Optional[ClassMapping] = None, upload_params: Optional[ClassMapping] = None):
-        super().__init__(message_template, format_args, upload_params)
-        self.transitions = transitions
-        self.api_endpoint = api_endpoint
-
-    def execute(self, user: User):
-        if not self.transitions:
-            return None
-        api_response = True  # Simulated API response
-        print("sending api call to:", self.api_endpoint)
-        next_step = self.transitions.get(api_response, user.flow_step)
-        return next_step
+async def handle_flow(message: Message):
+    user = await fetch_user_by_phone(message.from_number)
+    if user:
+        participation = await get_current_participation(user)
+        await handle_user(user, participation, message)
+    else:
+        await handle_new_user(message)
 
 
 class FlowManager:
@@ -144,11 +52,11 @@ class FlowManager:
         self.user = user
         self.participation = participation
 
-    async def update_user_flow(self, httpx_client: AsyncClient, next_step: str):
+    async def update_user_flow(self, next_step: str):
         self.user.flow_step = next_step.value
-        await update_user(httpx_client, self.user)
+        await update_user_by_phone(self.user)
 
-    async def handle_message(self, client: Client, httpx_client: AsyncClient, transition: Transition):
+    async def handle_message(self, transition: Transition):
         print("Current transition", transition)
         body = transition.get_template()
         format_args = transition.format_args
@@ -159,37 +67,38 @@ class FlowManager:
             for obj in objects:
                 for param in format_args.get(obj):
                     if obj == User:
-                        args[str(count)] = f"{self.user.__getattribute__(param)}"
+                        args[str(count)
+                             ] = f"{self.user.__getattribute__(param)}"
                     elif obj == "other":
                         if param == "current_participations":
-                            ticket_count = await get_current_ticket_number(httpx_client)
+                            ticket_count = await count_participations()
                             args[str(count)] = str(ticket_count)
                     else:
                         args[str(count)] = f"{param}"
                     count += 1
-            
+
             format_args = args
 
         try:
-            send_message(client, body, self.user, format_args)
+            send_message(body, self.user, format_args)
         except Exception as e:
             print(f"Failed to send message: {str(e)}")
 
-    async def handle_upload_params(self, client: AsyncClient, transition, message: Optional[Message] = None, response: Optional[str] = None):
+    async def handle_upload_params(self,  transition, message: Optional[Message] = None, response: Optional[str] = None):
         if transition.upload_params:
             sending = message if message else response
-            object = await transition.save_upload_params(client, sending)
+            object = await transition.save_upload_params(sending)
             if isinstance(object, User):
                 self.user = object
 
-    async def execute(self, client: Client, httpx_client: AsyncClient, message: Optional[Message] = None, response: Optional[str] = None):
+    async def execute(self, message: Optional[Message] = None, response: Optional[str] = None):
         print("User step:", self.user.flow_step)
         step = Steps(self.user.flow_step)
         print(step)
 
         transition = self.flow.get(step, None)
         if not transition:
-            raise HTTPException(status_code=500, detail="Invalid flow step")
+            raise ValueError("Invalid step")
 
         print("current transition:", transition)
 
@@ -198,25 +107,26 @@ class FlowManager:
                 print("handling message")
                 print("current participation", self.participation)
                 next_step = transition.execute(self.user, message)
-                print("Uploading:", transition.upload_params, message.body_content)
+                print("Uploading:", transition.upload_params,
+                      message.body_content)
                 if transition.upload_params:
-                    await self.handle_upload_params(httpx_client, transition, message)
+                    await self.handle_upload_params(transition, message)
         elif isinstance(transition, DashboardTransition):
             if response:
                 print("Handling response")
                 next_step = transition.execute(self.user, response)
                 if transition.upload_params:
-                    await self.handle_upload_params(httpx_client, transition, response)
+                    await self.handle_upload_params(transition, response)
 
         transition = self.flow.get(Steps(next_step), transition)
 
         if isinstance(transition, ServerTransition):
             print("Handling server transition")
             next_step = transition.execute(self.user)
-            await self.update_user_flow(httpx_client, next_step)
-            await self.handle_message(client, httpx_client, transition)
-            await self.execute(client, httpx_client, response=next_step)
+            await self.update_user_flow(next_step)
+            await self.handle_message(transition)
+            await self.execute(response=next_step)
         else:
             print("Handling normal transition")
-            await self.handle_message(client, httpx_client, transition)
-            await self.update_user_flow(httpx_client, next_step)
+            await self.handle_message(transition)
+            await self.update_user_flow(next_step)

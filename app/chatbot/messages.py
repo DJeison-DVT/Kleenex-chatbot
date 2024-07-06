@@ -2,12 +2,12 @@ import os
 import urllib.parse
 import json
 import requests
-from fastapi import HTTPException
-from httpx import AsyncClient
+from twilio.rest import Client
 
-from app.chatbot.steps import Steps
 from app.schemas.user import User
 from app.core.config import settings
+
+client = Client(settings.TWILIO_ACCOUNT_SID, settings.TWILIO_AUTH_TOKEN)
 
 
 class Message:
@@ -57,8 +57,9 @@ class Message:
                     print(f"Failed to download media from {url}")
 
 
-def send_message(client, body: str, user: User, format_args: dict = {}):
-    print(f"Sending message from messaging service: {settings.TWILIO_MESSAGING_SERVICE_SID}\nto {user.phone}\nwith content_sid: {body}")
+def send_message(body: str, user: User, format_args: dict = {}):
+    print(
+        f"Sending message from messaging service: {settings.TWILIO_MESSAGING_SERVICE_SID}\nto {user.phone}\nwith content_sid: {body}")
     print(f"Format args: {format_args}")
     try:
         client.messages.create(
@@ -69,5 +70,4 @@ def send_message(client, body: str, user: User, format_args: dict = {}):
         )
     except Exception as e:
         print(f"Error: {e}")
-        raise HTTPException(status_code=500, detail=f"Error: {e}")
-
+        raise RuntimeError("Failed to send message")

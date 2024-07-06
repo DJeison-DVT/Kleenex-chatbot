@@ -1,7 +1,8 @@
-from app.chatbot.user_flow import *
 from app.chatbot.steps import Steps
 from app.schemas.user import User
 from app.schemas.participation import Participation
+from app.chatbot.transitions import *
+from app.core.services.priority_number import get_priority_number
 
 INVALID_PHOTO_MAX_OPPORTUNITIES = 3
 DAILTY_PARTICIPAITONS = 5
@@ -56,7 +57,7 @@ FLOW = {
             True: Steps.DASHBOARD_WAITING,
             False: Steps.NO_PRIZE,
         },
-        api_endpoint='participation-number/',
+        callable=get_priority_number(),
         message_template='HX04cb615e50500f09dea065f819a26b10',
         upload_params=ClassMapping([(Participation, 'priority_number')])
     ),
@@ -72,7 +73,8 @@ FLOW = {
             'invalid': Steps.DASHBOARD_REJECTION,
         },
         message_template='HXf5e5575d9a622b9f6c396797433f4688',
-        format_args=ClassMapping([(Participation, 'priority_number'), (Participation, 'prize_name')])
+        format_args=ClassMapping(
+            [(Participation, 'priority_number'), (Participation, 'prize_name')])
     ),
     Steps.DASHBOARD_CONFIRMATION: DashboardTransition(
         message_template='HXaccd22243567d67d646ef272416481f9',
