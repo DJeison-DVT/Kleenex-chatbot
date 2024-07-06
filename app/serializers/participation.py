@@ -1,12 +1,10 @@
 from app.schemas import Participation
-from app.serializers.decorators import convert_id_to_str
-from app.serializers.user import serialize_user
+from app.utils.decorators import convert_id_to_str
 
 
-@convert_id_to_str(Participation)
 def serialize_participation(participation: Participation):
     return {
-        "_id": str(participation.id),
+        "_id": participation.id,
         "user": participation.user,
         "ticket_url": participation.ticket_url,
         "ticket_attempts": participation.ticket_attempts,
