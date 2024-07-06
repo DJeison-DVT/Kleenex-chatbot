@@ -1,13 +1,12 @@
 from typing import List
 
 from app.schemas import User
-from app.serializers.decorators import convert_id_to_str
+from app.utils.decorators import convert_id_to_str
 
 
-@convert_id_to_str(User)
 def serialize_user(user: User):
     return {
-        "_id": str(user.id),
+        "_id": user.id,
         "phone": user.phone,
         "terms": user.terms,
         "name": user.name if user.name else None,
