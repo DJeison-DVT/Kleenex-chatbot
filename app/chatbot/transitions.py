@@ -55,7 +55,7 @@ class Transition(ABC):
                     print(user)
                     print("changing:", param, "to:", message.body_content)
                     setattr(user, param, message.body_content)
-                    user = await update_user_by_phone(user)
+                    user = await update_user_by_phone(user_phone, user)
                     return user
             elif obj == Participation and message.body_content:
                 for param in params:
@@ -126,7 +126,7 @@ class DashboardTransition(Transition):
 
 
 class ServerTransition(Transition):
-    def __init__(self, transitions: Dict[bool, str], message_template: str, action: Optional[Callable], format_args: Optional[ClassMapping] = None, upload_params: Optional[ClassMapping] = None):
+    def __init__(self, transitions: Dict[bool, str], message_template: str, action: Optional[Callable] = None, format_args: Optional[ClassMapping] = None, upload_params: Optional[ClassMapping] = None):
         super().__init__(message_template, format_args, upload_params)
         self.transitions = transitions
         self.action = action

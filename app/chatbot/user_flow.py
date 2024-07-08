@@ -1,6 +1,6 @@
 from typing import Dict, Optional
 
-from app.schemas.user import User
+from app.schemas.user import User, UserCreation
 from app.schemas.participation import Participation, Status
 from app.chatbot.messages import Message, send_message
 from app.chatbot.steps import Steps
@@ -28,8 +28,10 @@ async def handle_user(user: User, participation: Participation, message: Message
 
 
 async def handle_new_user(message: Message):
-    user = await create_user(message.from_number)
+    user_creation = UserCreation(phone=message.from_number)
+    user = await create_user(user_creation)
     count = await count_participations()
+
     send_message(
         FLOW[Steps.ONBOARDING].message_template,
         user,
@@ -38,12 +40,16 @@ async def handle_new_user(message: Message):
 
 
 async def handle_flow(message: Message):
-    user = await fetch_user_by_phone(message.from_number)
-    if user:
+    try:
+        user = await fetch_user_by_phone(message.from_number)
         participation = await get_current_participation(user)
         await handle_user(user, participation, message)
-    else:
-        await handle_new_user(message)
+    except ValueError as e:
+        if "User not found" in str(e):
+            await handle_new_user(message)
+        else:
+            print(e)
+            raise e
 
 
 class FlowManager:
@@ -54,7 +60,7 @@ class FlowManager:
 
     async def update_user_flow(self, next_step: str):
         self.user.flow_step = next_step.value
-        await update_user_by_phone(self.user)
+        await update_user_by_phone(self.user.phone, self.user)
 
     async def handle_message(self, transition: Transition):
         print("Current transition", transition)

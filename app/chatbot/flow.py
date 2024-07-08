@@ -57,7 +57,7 @@ FLOW = {
             True: Steps.DASHBOARD_WAITING,
             False: Steps.NO_PRIZE,
         },
-        callable=get_priority_number(),
+        action=get_priority_number(),
         message_template='HX04cb615e50500f09dea065f819a26b10',
         upload_params=ClassMapping([(Participation, 'priority_number')])
     ),
