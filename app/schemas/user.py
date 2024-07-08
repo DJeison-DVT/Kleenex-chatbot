@@ -1,4 +1,4 @@
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import BaseModel, Field
 from typing import Dict, Optional
 from datetime import date
 
@@ -14,7 +14,7 @@ class User(BaseModel):
     phone: str
     terms: Optional[bool] = False
     name: Optional[str] = None
-    email: Optional[EmailStr] = None
+    email: Optional[str] = None
     flow_step: str = Steps.ONBOARDING.value
     submissions: Dict[date, int] = Field(default_factory=dict)
 
