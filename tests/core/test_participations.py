@@ -6,6 +6,7 @@ from bson import ObjectId
 from app.schemas.participation import ParticipationCreation, Participation, Status
 from app.schemas.user import User
 from app.core.services.participations import *
+from app.core.services.users import update_user_by_phone
 
 
 @pytest.mark.asyncio
@@ -16,7 +17,7 @@ async def test_create_participation(db: AsyncIOMotorClient, clean_db):
         "terms": True,
         "name": "Test User",
         "email": "test1@example.com",
-        "status": Status.INCOMPLETE.value,
+        "complete": False,
         "submissions": {}
     }
     user = User(**user_data)
@@ -41,7 +42,7 @@ async def test_fetch_participations(db: AsyncIOMotorClient, clean_db):
         "terms": True,
         "name": "Test User",
         "email": "test2@example.com",
-        "status": Status.INCOMPLETE.value,
+        "complete": False,
         "submissions": {}
     }
     participation_data = {
@@ -65,7 +66,7 @@ async def test_fetch_participation_by_id(db: AsyncIOMotorClient, clean_db):
         "terms": True,
         "name": "Test User",
         "email": "test3@example.com",
-        "status": Status.INCOMPLETE.value,
+        "complete": False,
         "submissions": {}
     }
     participation_data = {
@@ -89,7 +90,7 @@ async def test_fetch_participation_by_phone(db: AsyncIOMotorClient, clean_db):
         "terms": True,
         "name": "Test User",
         "email": "test4@example.com",
-        "status": Status.INCOMPLETE.value,
+        "complete": False,
         "submissions": {}
     }
     participation_data = {
@@ -112,7 +113,7 @@ async def test_count_participations(db: AsyncIOMotorClient, clean_db):
         "terms": True,
         "name": "Test User",
         "email": "test5@example.com",
-        "status": Status.INCOMPLETE.value,
+        "complete": False,
         "submissions": {}
     }
     participation_data = {
@@ -144,7 +145,7 @@ async def test_update_participation(db: AsyncIOMotorClient, clean_db):
         "terms": True,
         "name": "Test User",
         "email": "test6@example.com",
-        "status": Status.INCOMPLETE.value,
+        "complete": False,
         "submissions": {}
     }
     participation_data = {
@@ -173,7 +174,7 @@ async def test_delete_participation_by_id(db: AsyncIOMotorClient, clean_db):
         "terms": True,
         "name": "Test User",
         "email": "test7@example.com",
-        "status": Status.INCOMPLETE.value,
+        "complete": False,
         "submissions": {}
     }
     participation_data = {
@@ -188,3 +189,50 @@ async def test_delete_participation_by_id(db: AsyncIOMotorClient, clean_db):
 
     deleted_participation = await db.participations.find_one({"_id": result.inserted_id})
     assert deleted_participation is None
+
+
+@pytest.mark.asyncio
+async def test_update_participation_user_on_user_update(db: AsyncIOMotorClient, clean_db):
+    user_data = {
+        "_id": "user8",
+        "phone": "1234567898",
+        "terms": True,
+        "name": "Test User",
+        "email": "test8@example.com",
+        "complete": False,
+        "submissions": {}
+    }
+    await db.users.insert_one(user_data)
+
+    participation_data = {
+        "_id": ObjectId(),
+        "datetime": datetime.now(),
+        "user": user_data,
+        "status": Status.INCOMPLETE.value
+    }
+    ids = []
+    result = await db.participations.insert_one(participation_data)
+    ids.append(str(result.inserted_id))
+
+    user_data["complete"] = True
+    user = User(**user_data)
+    await update_user_by_phone(user.phone, user)
+
+    participation_data = {
+        "_id": ObjectId(),
+        "datetime": datetime.now(),
+        "user": user_data,
+        "status": Status.COMPLETE.value
+    }
+
+    result = await db.participations.insert_one(participation_data)
+    ids.append(str(result.inserted_id))
+
+    user_data["email"] = "fkadsjflasdjflasf"
+    user = User(**user_data)
+    await update_user_by_phone(user.phone, user)
+
+    for id in ids:
+        result = await db.participations.find_one({"_id": ObjectId(id)})
+        assert result["user"]["complete"] == True
+        assert result["user"]["email"] == user_data["email"]

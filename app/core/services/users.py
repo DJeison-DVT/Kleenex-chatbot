@@ -49,7 +49,15 @@ async def update_user_by_phone(phone: str, user: User) -> User:
     new_user.pop("_id", None)
 
     try:
-        await UsersCollection().update_one({"_id": id}, {"$set": new_user})
+        async with await _MongoClientSingleton().mongo_client.start_session() as session:
+            async with session.start_transaction():
+                await UsersCollection().update_one({"_id": id}, {"$set": new_user}, session=session)
+
+                await ParticipationsCollection().update_many(
+                    {"user.phone": user.phone},
+                    {"$set": {"user": new_user}},
+                    session=session
+                )
     except Exception as e:
         raise ValueError(f"Error: {e}")
 
