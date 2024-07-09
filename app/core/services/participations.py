@@ -7,6 +7,7 @@ from pymongo.errors import InvalidDocument
 
 from app.schemas.participation import Participation, Status, ParticipationCreation
 from app.db.db import ParticipationsCollection
+from app.chatbot.steps import Steps
 
 
 async def fetch_participations(
@@ -80,11 +81,15 @@ async def create_participation(
     if not user:
         raise ValueError("User is required")
 
+    flow = Steps.ONBOARDING.value if user.get(
+        "status") == "INCOMPLETE" else Steps.NEW_PARTICIPATION.value
+
     try:
         result = await ParticipationsCollection().insert_one({
             "datetime": datetime.now(),
             "user": user,
             "status": Status.INCOMPLETE.value,
+            "flow": flow,
         })
     except InvalidDocument as e:
         raise InvalidDocument(e)

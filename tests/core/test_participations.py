@@ -16,7 +16,7 @@ async def test_create_participation(db: AsyncIOMotorClient, clean_db):
         "terms": True,
         "name": "Test User",
         "email": "test1@example.com",
-        "flow_step": "ONBOARDING",
+        "status": "INCOMPLETE",
         "submissions": {}
     }
     user = User(**user_data)
@@ -25,7 +25,8 @@ async def test_create_participation(db: AsyncIOMotorClient, clean_db):
     participation = await create_participation(participation_data)
 
     assert participation.user.phone == "1234567891"
-    assert participation.status == Status.INCOMPLETE
+    assert participation.status == Status.INCOMPLETE.value
+    assert participation.flow == Steps.ONBOARDING.value
     assert isinstance(participation.id, str)  # Ensure _id is a string
 
     count = await db.participations.count_documents({})
@@ -40,7 +41,7 @@ async def test_fetch_participations(db: AsyncIOMotorClient, clean_db):
         "terms": True,
         "name": "Test User",
         "email": "test2@example.com",
-        "flow_step": "ONBOARDING",
+        "status": "INCOMPLETE",
         "submissions": {}
     }
     participation_data = {
@@ -64,7 +65,7 @@ async def test_fetch_participation_by_id(db: AsyncIOMotorClient, clean_db):
         "terms": True,
         "name": "Test User",
         "email": "test3@example.com",
-        "flow_step": "ONBOARDING",
+        "status": "INCOMPLETE",
         "submissions": {}
     }
     participation_data = {
@@ -88,7 +89,7 @@ async def test_fetch_participation_by_phone(db: AsyncIOMotorClient, clean_db):
         "terms": True,
         "name": "Test User",
         "email": "test4@example.com",
-        "flow_step": "ONBOARDING",
+        "status": "INCOMPLETE",
         "submissions": {}
     }
     participation_data = {
@@ -111,7 +112,7 @@ async def test_count_participations(db: AsyncIOMotorClient, clean_db):
         "terms": True,
         "name": "Test User",
         "email": "test5@example.com",
-        "flow_step": "ONBOARDING",
+        "status": "INCOMPLETE",
         "submissions": {}
     }
     participation_data = {
@@ -143,14 +144,15 @@ async def test_update_participation(db: AsyncIOMotorClient, clean_db):
         "terms": True,
         "name": "Test User",
         "email": "test6@example.com",
-        "flow_step": "ONBOARDING",
+        "status": "INCOMPLETE",
         "submissions": {}
     }
     participation_data = {
         "_id": ObjectId(),
         "datetime": datetime.now(),
         "user": user_data,
-        "status": Status.INCOMPLETE.value
+        "status": Status.INCOMPLETE.value,
+        "flow": Steps.ONBOARDING.value
     }
     result = await db.participations.insert_one(participation_data)
 
@@ -171,7 +173,7 @@ async def test_delete_participation_by_id(db: AsyncIOMotorClient, clean_db):
         "terms": True,
         "name": "Test User",
         "email": "test7@example.com",
-        "flow_step": "ONBOARDING",
+        "status": "INCOMPLETE",
         "submissions": {}
     }
     participation_data = {

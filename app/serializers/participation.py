@@ -8,11 +8,11 @@ def serialize_participation(participation: Participation):
         "user": participation.user,
         "ticket_url": participation.ticket_url,
         "ticket_attempts": participation.ticket_attempts,
-        "participationNumber": participation.participationNumber,
-        "products": participation.products,
+        "priority_number": participation.priority_number,
         "datetime": participation.datetime,
         "status": participation.status,
-        "prizeType": participation.prizeType,
+        "prize_type": participation.prize_type,
+        "flow": participation.flow,
     }
 
 
