@@ -1,8 +1,8 @@
 from typing import List
 
 from app.schemas.user import User, UserCreation
-from app.db.db import UsersCollection
-from app.chatbot.steps import Steps
+from app.db.db import UsersCollection, ParticipationsCollection, _MongoClientSingleton
+from app.schemas.user import Status
 
 
 async def fetch_users() -> List[User]:
@@ -29,7 +29,7 @@ async def create_user(user: UserCreation) -> User:
         raise ValueError("Phone number is required")
 
     try:
-        result = await UsersCollection().insert_one({"phone": phone, "terms": False, "flow_step": Steps.ONBOARDING.value})
+        result = await UsersCollection().insert_one({"phone": phone, "terms": False, "status": Status.INCOMPLETE.value})
     except AttributeError as e:
         raise ValueError(f"Error: {e}")
     except Exception as e:

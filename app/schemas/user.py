@@ -1,12 +1,16 @@
 from pydantic import BaseModel, Field
 from typing import Dict, Optional
 from datetime import date
-
-from app.chatbot.steps import Steps
+from enum import Enum
 
 
 class UserCreation(BaseModel):
     phone: str
+
+
+class Status(str, Enum):
+    INCOMPLETE = "INCOMPLETE"
+    COMPLETE = "COMPLETE"
 
 
 class User(BaseModel):
@@ -15,7 +19,7 @@ class User(BaseModel):
     terms: Optional[bool] = False
     name: Optional[str] = None
     email: Optional[str] = None
-    flow_step: str = Steps.ONBOARDING.value
+    status: Status = Status.INCOMPLETE
     submissions: Dict[date, int] = Field(default_factory=dict)
 
     def to_dict(self):
@@ -25,6 +29,6 @@ class User(BaseModel):
             "terms": self.terms,
             "name": self.name,
             "email": self.email,
-            "flow_step": self.flow_step,
+            "status": self.status,
             "submissions": {str(k): v for k, v in self.submissions.items()}
         }

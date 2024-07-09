@@ -12,15 +12,15 @@ async def test_create_user(db: AsyncIOMotorClient, clean_db):
 
     assert user.phone == "1234567890"
     assert user.terms is False
-    assert user.flow_step == "onboarding"
+    assert user.status == "INCOMPLETE"
 
 
 @pytest.mark.asyncio
 async def test_fetch_users(db: AsyncIOMotorClient, clean_db):
     user_data1 = {"phone": "1234567891",
-                  "terms": True, "flow_step": "onboarding"}
+                  "terms": True, "status": "INCOMPLETE"}
     user_data2 = {"phone": "1234567892",
-                  "terms": False, "flow_step": "completed"}
+                  "terms": False, "status": "COMPLETE"}
 
     await db.users.insert_many([user_data1, user_data2])
 
@@ -34,37 +34,37 @@ async def test_fetch_users(db: AsyncIOMotorClient, clean_db):
 @pytest.mark.asyncio
 async def test_fetch_user_by_phone(db: AsyncIOMotorClient, clean_db):
     user_data = {"phone": "1234567893",
-                 "terms": True, "flow_step": "onboarding"}
+                 "terms": True, "status": "INCOMPLETE"}
     await db.users.insert_one(user_data)
 
     user = await fetch_user_by_phone("1234567893")
 
     assert user.phone == "1234567893"
     assert user.terms is True
-    assert user.flow_step == "onboarding"
+    assert user.status == "INCOMPLETE"
 
 
 @pytest.mark.asyncio
 async def test_update_user_by_phone(db: AsyncIOMotorClient, clean_db):
     user_data = {"phone": "1234567894",
-                 "terms": False, "flow_step": "onboarding"}
+                 "terms": False, "status": "INCOMPLETE"}
     await db.users.insert_one(user_data)
 
     user = await fetch_user_by_phone("1234567894")
     user.terms = True
-    user.flow_step = "completed"
+    user.status = "COMPLETE"
 
     updated_user = await update_user_by_phone("1234567894", user)
 
     assert updated_user.phone == "1234567894"
     assert updated_user.terms is True
-    assert updated_user.flow_step == "completed"
+    assert updated_user.status == "COMPLETE"
 
 
 @pytest.mark.asyncio
 async def test_delete_user_by_phone(db: AsyncIOMotorClient, clean_db):
     user_data = {"phone": "1234567895",
-                 "terms": True, "flow_step": "onboarding"}
+                 "terms": True, "status": "INCOMPLETE"}
     await db.users.insert_one(user_data)
 
     await delete_user_by_phone("1234567895")
