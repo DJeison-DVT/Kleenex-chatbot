@@ -58,7 +58,7 @@ async def test_api_fetch_participation_by_id():
 @pytest.mark.asyncio
 async def test_api_delete_participation_by_id():
     async with AsyncClient() as client:
-        user_phones = ["1234567890", "0987654321"]
+        user_phones = [PHONE, "0987654321"]
         users = [{"phone": phone}
                  for phone in user_phones]
 
@@ -77,12 +77,15 @@ async def test_api_delete_participation_by_id():
             participations = response.json()
             length = len(participations)
 
+        created_participations = []
+
         # create 3 participations for each user
         PARTICIPATIONS_PER_USER = 3
         for user in clients:
             for _ in range(PARTICIPATIONS_PER_USER):
                 response = await client.post(FULL_URL, json={"user": user})
                 assert response.status_code == 201
+                created_participations.append(response.json())
 
         response = await client.get(FULL_URL)
         assert response.status_code == 200
@@ -91,7 +94,7 @@ async def test_api_delete_participation_by_id():
         assert len(participations) == length + \
             len(users) * PARTICIPATIONS_PER_USER
 
-        for participation in participations:
+        for participation in created_participations:
             response = await client.delete(FULL_URL + participation["_id"])
             assert response.status_code == 204
 
