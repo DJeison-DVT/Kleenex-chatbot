@@ -1,4 +1,4 @@
-# This workflow build and push a Docker container to Google Artifact Registry and deploy it on Cloud Run when a commit is pushed to the "main" branch
+r# This workflow build and push a Docker container to Google Artifact Registry and deploy it on Cloud Run when a commit is pushed to the "main" branch
 #
 # Overview:
 #
@@ -108,7 +108,7 @@ jobs:
             TWILIO_AUTH_TOKEN=${{ secrets.TWILIO_AUTH_TOKEN }}
             TWILIO_MESSAGING_SERVICE_SID=${{ secrets.TWILIO_MESSAGING_SERVICE_SID }}
             BASE_URL=${{ secrets.BASE_URL }}
-            MONGO_DATABASE=${{ secrets.MONGO_DATABASE }}
+            MONGO_DATABASE=${{ vars.MONGO_DATABASE }}
       # If required, use the Cloud Run url output in later steps
       - name: Show Output
         run: echo ${{ steps.deploy.outputs.url }}
