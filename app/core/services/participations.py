@@ -82,7 +82,7 @@ async def create_participation(
         raise ValueError("User is required")
 
     flow = Steps.ONBOARDING.value if user.get(
-        "status") == "INCOMPLETE" else Steps.NEW_PARTICIPATION.value
+        "complete") == False else Steps.NEW_PARTICIPATION.value
 
     try:
         result = await ParticipationsCollection().insert_one({

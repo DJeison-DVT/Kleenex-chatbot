@@ -16,7 +16,7 @@ async def test_create_participation(db: AsyncIOMotorClient, clean_db):
         "terms": True,
         "name": "Test User",
         "email": "test1@example.com",
-        "status": "INCOMPLETE",
+        "status": Status.INCOMPLETE.value,
         "submissions": {}
     }
     user = User(**user_data)
@@ -41,7 +41,7 @@ async def test_fetch_participations(db: AsyncIOMotorClient, clean_db):
         "terms": True,
         "name": "Test User",
         "email": "test2@example.com",
-        "status": "INCOMPLETE",
+        "status": Status.INCOMPLETE.value,
         "submissions": {}
     }
     participation_data = {
@@ -65,7 +65,7 @@ async def test_fetch_participation_by_id(db: AsyncIOMotorClient, clean_db):
         "terms": True,
         "name": "Test User",
         "email": "test3@example.com",
-        "status": "INCOMPLETE",
+        "status": Status.INCOMPLETE.value,
         "submissions": {}
     }
     participation_data = {
@@ -89,7 +89,7 @@ async def test_fetch_participation_by_phone(db: AsyncIOMotorClient, clean_db):
         "terms": True,
         "name": "Test User",
         "email": "test4@example.com",
-        "status": "INCOMPLETE",
+        "status": Status.INCOMPLETE.value,
         "submissions": {}
     }
     participation_data = {
@@ -112,7 +112,7 @@ async def test_count_participations(db: AsyncIOMotorClient, clean_db):
         "terms": True,
         "name": "Test User",
         "email": "test5@example.com",
-        "status": "INCOMPLETE",
+        "status": Status.INCOMPLETE.value,
         "submissions": {}
     }
     participation_data = {
@@ -144,7 +144,7 @@ async def test_update_participation(db: AsyncIOMotorClient, clean_db):
         "terms": True,
         "name": "Test User",
         "email": "test6@example.com",
-        "status": "INCOMPLETE",
+        "status": Status.INCOMPLETE.value,
         "submissions": {}
     }
     participation_data = {
@@ -173,7 +173,7 @@ async def test_delete_participation_by_id(db: AsyncIOMotorClient, clean_db):
         "terms": True,
         "name": "Test User",
         "email": "test7@example.com",
-        "status": "INCOMPLETE",
+        "status": Status.INCOMPLETE.value,
         "submissions": {}
     }
     participation_data = {

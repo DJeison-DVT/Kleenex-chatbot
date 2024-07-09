@@ -12,15 +12,15 @@ async def test_create_user(db: AsyncIOMotorClient, clean_db):
 
     assert user.phone == "1234567890"
     assert user.terms is False
-    assert user.status == "INCOMPLETE"
+    assert user.complete is False
 
 
 @pytest.mark.asyncio
 async def test_fetch_users(db: AsyncIOMotorClient, clean_db):
     user_data1 = {"phone": "1234567891",
-                  "terms": True, "status": "INCOMPLETE"}
+                  "terms": True, "complete": False}
     user_data2 = {"phone": "1234567892",
-                  "terms": False, "status": "COMPLETE"}
+                  "terms": False, "complete": True}
 
     await db.users.insert_many([user_data1, user_data2])
 
@@ -34,37 +34,37 @@ async def test_fetch_users(db: AsyncIOMotorClient, clean_db):
 @pytest.mark.asyncio
 async def test_fetch_user_by_phone(db: AsyncIOMotorClient, clean_db):
     user_data = {"phone": "1234567893",
-                 "terms": True, "status": "INCOMPLETE"}
+                 "terms": True, "complete": False}
     await db.users.insert_one(user_data)
 
     user = await fetch_user_by_phone("1234567893")
 
     assert user.phone == "1234567893"
     assert user.terms is True
-    assert user.status == "INCOMPLETE"
+    assert user.complete == False
 
 
 @pytest.mark.asyncio
 async def test_update_user_by_phone(db: AsyncIOMotorClient, clean_db):
     user_data = {"phone": "1234567894",
-                 "terms": False, "status": "INCOMPLETE"}
+                 "terms": False, "complete": False}
     await db.users.insert_one(user_data)
 
     user = await fetch_user_by_phone("1234567894")
     user.terms = True
-    user.status = "COMPLETE"
+    user.complete = True
 
     updated_user = await update_user_by_phone("1234567894", user)
 
     assert updated_user.phone == "1234567894"
     assert updated_user.terms is True
-    assert updated_user.status == "COMPLETE"
+    assert updated_user.complete == True
 
 
 @pytest.mark.asyncio
 async def test_delete_user_by_phone(db: AsyncIOMotorClient, clean_db):
     user_data = {"phone": "1234567895",
-                 "terms": True, "status": "INCOMPLETE"}
+                 "terms": True, "complete": False}
     await db.users.insert_one(user_data)
 
     await delete_user_by_phone("1234567895")

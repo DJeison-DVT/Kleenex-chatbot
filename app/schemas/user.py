@@ -8,18 +8,13 @@ class UserCreation(BaseModel):
     phone: str
 
 
-class Status(str, Enum):
-    INCOMPLETE = "INCOMPLETE"
-    COMPLETE = "COMPLETE"
-
-
 class User(BaseModel):
     id: str = Field(..., alias="_id")
     phone: str
     terms: Optional[bool] = False
     name: Optional[str] = None
     email: Optional[str] = None
-    status: Status = Status.INCOMPLETE
+    complete: bool = False
     submissions: Dict[date, int] = Field(default_factory=dict)
 
     def to_dict(self):
@@ -29,6 +24,6 @@ class User(BaseModel):
             "terms": self.terms,
             "name": self.name,
             "email": self.email,
-            "status": self.status,
+            "complete": self.complete,
             "submissions": {str(k): v for k, v in self.submissions.items()}
         }
