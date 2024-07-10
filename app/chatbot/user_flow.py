@@ -1,5 +1,6 @@
 from typing import Dict, Optional
 from datetime import datetime
+import asyncio
 
 from app.schemas.user import User, UserCreation
 from app.schemas.participation import Participation, Status
@@ -79,6 +80,9 @@ class FlowManager:
                     if obj == User:
                         args[str(count)
                              ] = f"{self.user.__getattribute__(param)}"
+                    elif obj == Participation:
+                        args[str(
+                            count)] = f"{self.participation.__getattribute__(param)}"
                     elif obj == "other":
                         if param == "current_participations":
                             ticket_count = await count_participations()
@@ -127,11 +131,16 @@ class FlowManager:
 
         if isinstance(transition, ServerTransition):
             print("Handling server transition")
-            next_step = transition.execute(participation=self.participation)
-            await self.update_user_flow(next_step)
-            await self.handle_message(transition)
-            await self.execute(response=next_step)
-        if isinstance(transition, DashboardTransition):
+            # sleep for 3 sec
+            await asyncio.sleep(3)
+            next_step = await transition.execute(participation=self.participation)
+            if not next_step:
+                await self.handle_message(transition)
+            else:
+                await self.update_user_flow(next_step)
+                await self.handle_message(transition)
+                await self.execute(response=next_step)
+        elif isinstance(transition, DashboardTransition):
             print("Handling dashboard transition")
         else:
             print("Handling normal transition")
