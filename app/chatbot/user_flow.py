@@ -1,13 +1,13 @@
 from typing import Dict, Optional
 from datetime import datetime
-import asyncio
 
 from app.schemas.user import User, UserCreation
 from app.schemas.participation import Participation, Status
 from app.chatbot.messages import Message, send_message
 from app.chatbot.steps import Steps
 from app.core.services.users import update_user_by_phone, create_user, fetch_user_by_phone
-from app.core.services.participations import count_participations, ParticipationCreation, create_participation, fetch_participations, update_participation
+from app.core.services.participations import ParticipationCreation, create_participation, fetch_participations, update_participation
+from app.core.services.priority_number import count_participations
 from app.chatbot.transitions import Transition, WhatsAppTransition, DashboardTransition, ServerTransition
 from app.chatbot.flow import FLOW
 
@@ -132,7 +132,6 @@ class FlowManager:
         if isinstance(transition, ServerTransition):
             print("Handling server transition")
             # sleep for 3 sec
-            await asyncio.sleep(3)
             next_step = await transition.execute(participation=self.participation)
             if not next_step:
                 await self.handle_message(transition)
