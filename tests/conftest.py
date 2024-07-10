@@ -27,11 +27,15 @@ async def clean_db(db):
     # Cleanup before each test
     await db.participations.delete_many({})
     await db.users.delete_many({})
+    await db.prizes.delete_many({})
+    await db.counters.delete_many({})
 
     yield
     # Cleanup after each test
     await db.participations.delete_many({})
     await db.users.delete_many({})
+    await db.prizes.delete_many({})
+    await db.counters.delete_many({})
 
 
 @pytest.fixture(scope="session")

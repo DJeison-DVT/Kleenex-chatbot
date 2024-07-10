@@ -2,7 +2,7 @@ from app.chatbot.steps import Steps
 from app.schemas.user import User
 from app.schemas.participation import Participation
 from app.chatbot.transitions import *
-from app.core.services.priority_number import get_priority_number
+from app.core.services.priority_number import set_priority_number
 
 INVALID_PHOTO_MAX_OPPORTUNITIES = 3
 DAILTY_PARTICIPAITONS = 5
@@ -68,7 +68,7 @@ FLOW = {
             True: Steps.DASHBOARD_WAITING,
             False: Steps.NO_PRIZE,
         },
-        action=get_priority_number,
+        action=set_priority_number,
         message_template='HX04cb615e50500f09dea065f819a26b10',
         upload_params=ClassMapping([(Participation, 'priority_number')])
     ),
