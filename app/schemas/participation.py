@@ -27,7 +27,7 @@ class Participation(BaseModel):
     priority_number: int = -1
     datetime: datetime
     status: Status = Status.INCOMPLETE
-    prize_type: Optional[str] = None
+    prize: Optional[str] = None
     flow: str = Steps.ONBOARDING.value
 
     def to_dict(self):
@@ -39,6 +39,6 @@ class Participation(BaseModel):
             "priority_number": self.priority_number,
             "datetime": self.datetime,
             "status": self.status,
-            "prize_type": self.prize_type,
+            "prize": self.prize,
             "flow": self.flow
         }
