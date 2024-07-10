@@ -36,7 +36,7 @@ class Transition(ABC):
         self.upload_params = upload_params
 
     @abstractmethod
-    def execute(self, user: User, message: Optional[Message] = None, response: Optional[str] = None) -> str:
+    def execute(self, participation: Optional[Participation] = None, message: Optional[Message] = None, response: Optional[str] = None) -> str:
         pass
 
     def get_template(self) -> str:
@@ -77,17 +77,17 @@ class ResponseDependentTransition(WhatsAppTransition):
         super().__init__(message_template, format_args, upload_params)
         self.transitions = transitions
 
-    def execute(self, user: User, message: Message):
+    def execute(self, participation: Participation, message: Message):
         user_response = re.sub(r'[^\x00-\x7F]+', '',
                                message.body_content).lower().strip()
 
-        next_step = self.transitions.get(user_response, user.flow_step)
-        if user_response == "si acepto":
+        next_step = self.transitions.get(user_response, participation.flow)
+        if user_response == "si acepto" or user_response == "confirmar":
             message.body_content = True
         elif user_response == "no acepto":
             message.body_content = False
 
-        if next_step == user.flow_step:
+        if next_step == participation.flow:
             message.body_content = None
         return Steps(next_step)
 
@@ -97,7 +97,7 @@ class ResponseIndependentTransition(WhatsAppTransition):
         super().__init__(message_template, format_args, upload_params)
         self.next_step = next_step
 
-    def execute(self, user: User, message: Message):
+    def execute(self, participation: Participation = None, message: Message = None):
         return self.next_step
 
 
@@ -107,8 +107,9 @@ class MultimediaUploadTransition(WhatsAppTransition):
         self.success_step = success_step
         self.failure_step = failure_step
 
-    def execute(self, user: User, message: Message):
-        if message.num_media > 0:
+    # TODO upload to bucket
+    def execute(self, participation: Participation = None, message: Message = None):
+        if message and message.num_media > 0:
             return self.success_step
         return self.failure_step
 
@@ -118,7 +119,7 @@ class DashboardTransition(Transition):
         super().__init__(message_template, format_args, upload_params)
         self.transitions = transitions
 
-    def execute(self, user: User, response: str):
+    def execute(self, response: str):
         dashboard_response = response.body_content.lower().strip()
         next_step = self.transitions.get(
             dashboard_response, "new_participation")
@@ -131,10 +132,10 @@ class ServerTransition(Transition):
         self.transitions = transitions
         self.action = action
 
-    def execute(self, user: User):
+    def execute(self, participation: Participation):
         if not self.transitions:
             return None
         api_response = True  # Simulated API response
-        print("sending api call to:", self.api_endpoint)
-        next_step = self.transitions.get(api_response, user.flow_step)
+        print("sending api call to:", self.action)
+        next_step = self.transitions.get(api_response, participation.flow)
         return next_step

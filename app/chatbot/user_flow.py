@@ -1,18 +1,18 @@
 from typing import Dict, Optional
+from datetime import datetime
 
 from app.schemas.user import User, UserCreation
 from app.schemas.participation import Participation, Status
 from app.chatbot.messages import Message, send_message
 from app.chatbot.steps import Steps
 from app.core.services.users import update_user_by_phone, create_user, fetch_user_by_phone
-from app.core.services.participations import count_participations, ParticipationCreation, create_participation, fetch_participations
+from app.core.services.participations import count_participations, ParticipationCreation, create_participation, fetch_participations, update_participation
 from app.chatbot.transitions import Transition, WhatsAppTransition, DashboardTransition, ServerTransition
 from app.chatbot.flow import FLOW
 
 
 async def get_current_participation(user: User) -> Participation:
-    participations = await fetch_participations(phone=user.phone, status=Status.INCOMPLETE.value)
-
+    participations = await fetch_participations(phone=user.phone, status=Status.INCOMPLETE.value, date=datetime.now())
     if isinstance(participations, list):
         participation = participations[0] if participations else None
     if not participation:
@@ -24,7 +24,11 @@ async def get_current_participation(user: User) -> Participation:
 
 async def handle_user(user: User, participation: Participation, message: Message):
     flow_manager = FlowManager(FLOW, user, participation)
-    await flow_manager.execute(message)
+    try:
+        await flow_manager.execute(message=message)
+    except Exception as e:
+        print(e)
+        raise e
 
 
 async def handle_new_user(message: Message):
@@ -59,8 +63,8 @@ class FlowManager:
         self.participation = participation
 
     async def update_user_flow(self, next_step: str):
-        self.user.flow_step = next_step.value
-        await update_user_by_phone(self.user.phone, self.user)
+        self.participation.flow = next_step.value
+        await update_participation(self.participation.id, self.participation)
 
     async def handle_message(self, transition: Transition):
         print("Current transition", transition)
@@ -98,40 +102,37 @@ class FlowManager:
                 self.user = object
 
     async def execute(self, message: Optional[Message] = None, response: Optional[str] = None):
-        print("User step:", self.user.flow_step)
-        step = Steps(self.user.flow_step)
-        print(step)
-
+        step = Steps(self.participation.flow)
         transition = self.flow.get(step, None)
         if not transition:
             raise ValueError("Invalid step")
 
-        print("current transition:", transition)
-
+        next_step = step
         if isinstance(transition, WhatsAppTransition):
             if message:
-                print("handling message")
-                print("current participation", self.participation)
-                next_step = transition.execute(self.user, message)
+                next_step = transition.execute(
+                    participation=self.participation, message=message)
                 print("Uploading:", transition.upload_params,
                       message.body_content)
                 if transition.upload_params:
-                    await self.handle_upload_params(transition, message)
+                    await self.handle_upload_params(transition=transition, message=message)
         elif isinstance(transition, DashboardTransition):
             if response:
                 print("Handling response")
-                next_step = transition.execute(self.user, response)
+                next_step = transition.execute(response=response)
                 if transition.upload_params:
-                    await self.handle_upload_params(transition, response)
+                    await self.handle_upload_params(transition=transition, response=response)
 
         transition = self.flow.get(Steps(next_step), transition)
 
         if isinstance(transition, ServerTransition):
             print("Handling server transition")
-            next_step = transition.execute(self.user)
+            next_step = transition.execute(participation=self.participation)
             await self.update_user_flow(next_step)
             await self.handle_message(transition)
             await self.execute(response=next_step)
+        if isinstance(transition, DashboardTransition):
+            print("Handling dashboard transition")
         else:
             print("Handling normal transition")
             await self.handle_message(transition)
