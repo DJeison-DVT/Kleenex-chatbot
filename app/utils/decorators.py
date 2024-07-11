@@ -9,6 +9,7 @@ from typing import Type, Dict
 def check_existence(func: Callable):
     @wraps(func)
     async def wrapper(*args, **kwargs):
+        result = None
         try:
             result = await func(*args, **kwargs)
         except ValueError as e:
