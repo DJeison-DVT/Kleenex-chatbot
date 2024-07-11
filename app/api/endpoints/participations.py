@@ -21,7 +21,11 @@ async def get_participation_by_id(id: str):
 
 @check_existence
 async def get_participations(limit: int, date: datetime, phone: str, status: str):
-    participations = await fetch_participations(limit, date, phone, status)
+    try:
+        participations = await fetch_participations(limit, date, phone, status)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Unexpected error: {e}")
+    print(participations)
     return serialize_participations(participations)
 
 

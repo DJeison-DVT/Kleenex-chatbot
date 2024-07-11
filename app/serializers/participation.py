@@ -5,7 +5,7 @@ from app.utils.decorators import convert_id_to_str
 def serialize_participation(participation: Participation):
     return {
         "_id": participation.id,
-        "user": participation.user,
+        "user": participation.user.to_dict(),
         "ticket_url": participation.ticket_url,
         "ticket_attempts": participation.ticket_attempts,
         "priority_number": participation.priority_number,

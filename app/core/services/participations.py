@@ -29,13 +29,15 @@ async def fetch_participations(
     if status:
         query["status"] = status
 
-    cursor = ParticipationsCollection().find(query).sort(
-        "datetime", ASCENDING).limit(limit)
+    cursor = ParticipationsCollection().find(query).limit(limit)
     participations = []
     async for participation in cursor:
         participation["_id"] = str(participation["_id"])
-        participations.append(Participation(**participation))
-
+        try:
+            participation = Participation(**participation)
+        except Exception as e:
+            raise e
+        participations.append(participation)
     return participations
 
 
@@ -78,7 +80,7 @@ async def create_participation(
 ):
     user = participation.user.to_dict()
 
-    if not user:
+    if not user or not user.get("_id"):
         raise ValueError("User is required")
 
     flow = Steps.ONBOARDING.value if user.get(
