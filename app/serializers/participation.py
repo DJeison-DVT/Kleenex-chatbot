@@ -11,7 +11,7 @@ def serialize_participation(participation: Participation):
         "priority_number": participation.priority_number,
         "datetime": participation.datetime,
         "status": participation.status,
-        "prize_type": participation.prize_type,
+        "prize": participation.prize,
         "flow": participation.flow,
     }
 

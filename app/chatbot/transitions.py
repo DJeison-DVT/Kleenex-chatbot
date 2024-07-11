@@ -115,11 +115,17 @@ class MultimediaUploadTransition(WhatsAppTransition):
 
 
 class DashboardTransition(Transition):
-    def __init__(self, message_template: str, transitions: Optional[Dict[str, str]] = None,  format_args: Optional[ClassMapping] = None, upload_params: Optional[ClassMapping] = None):
+    def __init__(self, message_template: str, transitions: Optional[Dict[str, str]] = None,  format_args: Optional[ClassMapping] = None, upload_params: Optional[ClassMapping] = None, status: Optional[str] = None):
         super().__init__(message_template, format_args, upload_params)
         self.transitions = transitions
+        self.status = status
 
-    def execute(self, response: str):
+    async def execute(self, participation: Participation, response: str):
+        if self.status:
+            participation.status = self.status
+            await update_participation(participation.id, participation)
+        if not self.transitions:
+            return
         dashboard_response = response.body_content.lower().strip()
         next_step = self.transitions.get(
             dashboard_response, "new_participation")
@@ -127,15 +133,17 @@ class DashboardTransition(Transition):
 
 
 class ServerTransition(Transition):
-    def __init__(self, transitions: Dict[bool, str], message_template: str, action: Optional[Callable] = None, format_args: Optional[ClassMapping] = None, upload_params: Optional[ClassMapping] = None):
+    def __init__(self, transitions: Dict[bool, str], message_template: str, action: Optional[Callable] = None, format_args: Optional[ClassMapping] = None, upload_params: Optional[ClassMapping] = None, status: Optional[str] = None):
         super().__init__(message_template, format_args, upload_params)
         self.transitions = transitions
         self.action = action
+        self.status = status
 
-    def execute(self, participation: Participation):
+    async def execute(self, participation: Participation):
+        if self.status:
+            participation.status = self.status
+            await update_participation(participation.id, participation)
         if not self.transitions:
             return None
-        api_response = True  # Simulated API response
-        print("sending api call to:", self.action)
-        next_step = self.transitions.get(api_response, participation.flow)
-        return next_step
+        result = await self.action(participation)
+        return self.transitions.get(result, participation.flow)

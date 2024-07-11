@@ -6,7 +6,8 @@ from app.schemas.participation import Participation, Status
 from app.chatbot.messages import Message, send_message
 from app.chatbot.steps import Steps
 from app.core.services.users import update_user_by_phone, create_user, fetch_user_by_phone
-from app.core.services.participations import count_participations, ParticipationCreation, create_participation, fetch_participations, update_participation
+from app.core.services.participations import ParticipationCreation, create_participation, fetch_participations, update_participation
+from app.core.services.priority_number import count_participations
 from app.chatbot.transitions import Transition, WhatsAppTransition, DashboardTransition, ServerTransition
 from app.chatbot.flow import FLOW
 
@@ -79,6 +80,9 @@ class FlowManager:
                     if obj == User:
                         args[str(count)
                              ] = f"{self.user.__getattribute__(param)}"
+                    elif obj == Participation:
+                        args[str(
+                            count)] = f"{self.participation.__getattribute__(param)}"
                     elif obj == "other":
                         if param == "current_participations":
                             ticket_count = await count_participations()
@@ -127,11 +131,15 @@ class FlowManager:
 
         if isinstance(transition, ServerTransition):
             print("Handling server transition")
-            next_step = transition.execute(participation=self.participation)
-            await self.update_user_flow(next_step)
-            await self.handle_message(transition)
-            await self.execute(response=next_step)
-        if isinstance(transition, DashboardTransition):
+            # sleep for 3 sec
+            next_step = await transition.execute(participation=self.participation)
+            if not next_step:
+                await self.handle_message(transition)
+            else:
+                await self.update_user_flow(next_step)
+                await self.handle_message(transition)
+                await self.execute(response=next_step)
+        elif isinstance(transition, DashboardTransition):
             print("Handling dashboard transition")
         else:
             print("Handling normal transition")
