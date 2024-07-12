@@ -9,6 +9,7 @@ from app.schemas.user import User
 
 class Status(str, Enum):
     COMPLETE = "COMPLETE"
+    PENDING = "PENDING"
     INCOMPLETE = "INCOMPLETE"
     REJECTED = "REJECTED"
     APPROVED = "APPROVED"

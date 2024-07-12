@@ -32,7 +32,8 @@ FLOW = {
     Steps.VALIDATE_PHOTO: MultimediaUploadTransition(
         success_step=Steps.PRIORITY_NUMBER,
         failure_step=Steps.INVALID_PHOTO,
-        message_template='HX0958631a027c2144d92996efbdf5fbdc'
+        message_template='HX842b1bcba42432bd76984e35a3c406c8',
+        format_args=ClassMapping([(None, 'current_participations')]),
     ),
     Steps.ONBOARDING_INVALID_PHOTO: MultimediaUploadTransition(
         success_step=Steps.ONBOARDING_NAME,
@@ -70,6 +71,7 @@ FLOW = {
         },
         action=set_priority_number,
         message_template='HX04cb615e50500f09dea065f819a26b10',
+        status=Status.PENDING.value
     ),
     Steps.NO_PRIZE: ServerTransition(
         transitions=None,
@@ -99,5 +101,9 @@ FLOW = {
     Steps.DASHBOARD_REJECTION: DashboardTransition(
         message_template='HX07c4758573a8f0dc490e45c604a7a55f',
         status=Status.REJECTED.value
+    ),
+    Steps.NEW_PARTICIPATION: ResponseIndependentTransition(
+        next_step=Steps.VALIDATE_PHOTO,
+        message_template='HX842b1bcba42432bd76984e35a3c406c8',
     )
 }
