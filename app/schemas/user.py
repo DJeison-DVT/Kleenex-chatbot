@@ -1,7 +1,5 @@
 from pydantic import BaseModel, Field
 from typing import Dict, Optional
-from datetime import date
-from enum import Enum
 
 
 class UserCreation(BaseModel):
@@ -15,7 +13,7 @@ class User(BaseModel):
     name: Optional[str] = None
     email: Optional[str] = None
     complete: bool = False
-    submissions: Dict[date, int] = Field(default_factory=dict)
+    submissions: Dict[str, int] = Field(default_factory=dict)
 
     def to_dict(self):
         return {

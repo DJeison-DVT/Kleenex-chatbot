@@ -5,7 +5,7 @@ from app.schemas.user import User, UserCreation
 from app.schemas.participation import Participation, Status
 from app.chatbot.messages import Message, send_message
 from app.chatbot.steps import Steps
-from app.core.services.users import update_user_by_phone, create_user, fetch_user_by_phone
+from app.core.services.users import update_user_by_phone, create_user, fetch_user_by_phone, can_participate
 from app.core.services.participations import ParticipationCreation, create_participation, fetch_participations, update_participation
 from app.core.services.priority_number import count_participations
 from app.chatbot.transitions import Transition, WhatsAppTransition, DashboardTransition, ServerTransition
@@ -44,11 +44,21 @@ async def handle_new_user(message: Message):
     )
 
 
+def handle_max_participations(user: User):
+    send_message(
+        FLOW[Steps.MAX_PARTICIPATIONS].message_template,
+        user
+    )
+
+
 async def handle_flow(message: Message):
     try:
         user = await fetch_user_by_phone(message.from_number)
-        participation = await get_current_participation(user)
-        await handle_user(user, participation, message)
+        if not can_participate(user):
+            handle_max_participations(user)
+        else:
+            participation = await get_current_participation(user)
+            await handle_user(user, participation, message)
     except ValueError as e:
         if "User not found" in str(e):
             await handle_new_user(message)

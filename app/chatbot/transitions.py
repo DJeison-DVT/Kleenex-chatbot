@@ -6,9 +6,9 @@ from collections import defaultdict
 from typing import Callable
 
 from app.schemas.user import User
-from app.schemas.participation import Participation
+from app.schemas.participation import Participation, Status
 from app.core.services.users import fetch_user_by_phone, update_user_by_phone
-from app.core.services.participations import fetch_participation_by_phone, update_participation
+from app.core.services.participations import fetch_participation_by_phone, update_participation, add_participation
 from app.chatbot.messages import Message
 from app.chatbot.steps import Steps
 
@@ -141,6 +141,8 @@ class ServerTransition(Transition):
 
     async def execute(self, participation: Participation):
         if self.status:
+            if self.status == Status.PENDING.value:
+                await add_participation(participation)
             participation.status = self.status
             await update_participation(participation.id, participation)
         if not self.transitions:

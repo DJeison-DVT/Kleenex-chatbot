@@ -8,6 +8,7 @@ from pymongo.errors import InvalidDocument
 from app.schemas.participation import Participation, Status, ParticipationCreation
 from app.db.db import ParticipationsCollection
 from app.chatbot.steps import Steps
+from app.core.services.users import fetch_user_by_phone, update_user_by_phone
 
 
 async def fetch_participations(
@@ -128,3 +129,17 @@ async def delete_participation_by_id(id: str):
     object_id = ObjectId(id)
 
     await ParticipationsCollection().delete_one({"_id": object_id})
+
+
+async def add_participation(participation: Participation):
+    phone = participation.user.phone
+    if not phone:
+        raise ValueError("Phone number is required")
+    user = await fetch_user_by_phone(phone)
+    if not user:
+        raise ValueError("User not found")
+
+    today = datetime.now().strftime("%Y-%m-%d")
+
+    user.submissions[today] = user.submissions.get(today, 0) + 1
+    await update_user_by_phone(phone, user)

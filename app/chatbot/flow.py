@@ -4,8 +4,6 @@ from app.schemas.participation import Participation, Status
 from app.chatbot.transitions import *
 from app.core.services.priority_number import set_priority_number
 
-INVALID_PHOTO_MAX_OPPORTUNITIES = 3
-DAILTY_PARTICIPAITONS = 5
 
 FLOW = {
     Steps.ONBOARDING: ResponseDependentTransition(
@@ -105,5 +103,9 @@ FLOW = {
     Steps.NEW_PARTICIPATION: ResponseIndependentTransition(
         next_step=Steps.VALIDATE_PHOTO,
         message_template='HX842b1bcba42432bd76984e35a3c406c8',
-    )
+    ),
+    Steps.MAX_PARTICIPATIONS: ServerTransition(
+        transitions=None,
+        message_template='HX4fa1b484f4549d844bb2489db9bf21d8',
+    ),
 }

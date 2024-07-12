@@ -1,7 +1,9 @@
 from typing import List
+from datetime import datetime
 
 from app.schemas.user import User, UserCreation
 from app.db.db import UsersCollection, ParticipationsCollection, _MongoClientSingleton
+from app.core.config import settings
 
 
 async def fetch_users() -> List[User]:
@@ -53,6 +55,7 @@ async def update_user_by_phone(phone: str, user: User) -> User:
             async with session.start_transaction():
                 await UsersCollection().update_one({"_id": id}, {"$set": new_user}, session=session)
 
+                new_user["_id"] = str(id)
                 await ParticipationsCollection().update_many(
                     {"user.phone": user.phone},
                     {"$set": {"user": new_user}},
@@ -72,3 +75,15 @@ async def delete_user_by_phone(phone: str):
         raise ValueError("User not found")
 
     await UsersCollection().delete_one({"phone": phone})
+
+
+def can_participate(user: User) -> bool:
+    today = datetime.now().strftime("%Y-%m-%d")
+    submissions = user.submissions.get(today, 0)
+    print(f"Submissions: {submissions}")
+    print(f"Settings: {settings.DAILY_PARTICIPAITONS}")
+
+    print(f"{submissions >= settings.DAILY_PARTICIPAITONS} {submissions} >= {settings.DAILY_PARTICIPAITONS}")
+    if submissions >= settings.DAILY_PARTICIPAITONS:
+        return False
+    return True

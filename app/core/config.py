@@ -31,6 +31,8 @@ class Settings(BaseSettings):
     TWILIO_ACCOUNT_SID: str
     TWILIO_AUTH_TOKEN: str
     TWILIO_MESSAGING_SERVICE_SID: str
+    INVALID_PHOTO_MAX_OPPORTUNITIES: int = 3
+    DAILY_PARTICIPAITONS: int = 5
 
     model_config = SettingsConfigDict(
         env_file='.env', env_file_encoding='utf-8')
