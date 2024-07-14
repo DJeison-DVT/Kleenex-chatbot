@@ -2,18 +2,19 @@ from datetime import datetime
 from bson import ObjectId
 from typing import Dict
 
-from app.db.db import _MongoClientSingleton, MongoDatabase, ParticipationsCollection
+from app.db.db import _MongoClientSingleton, ParticipationsCollection, CountersCollection, PrizesCollection
 from app.schemas.participation import Participation, Status
 
 
 async def count_participations(date: datetime = datetime.now()) -> int:
     date = date.strftime("%Y-%m-%d")
-    count = await MongoDatabase().counters.find_one({"_id": date})
+    count = await CountersCollection().find_one({"_id": date})
     return count["value"] if count else 0
 
 
 async def get_prize(priority_number: int, date: datetime, session) -> Dict:
-    prize = await MongoDatabase().prizes.find_one_and_update(
+    date = date.strftime("%Y-%m-%d")
+    prize = await PrizesCollection().find_one_and_update(
         {"priority_number": priority_number, "date": date, "taken": False},
         {"$set": {"taken": True}},
         session=session,
@@ -27,7 +28,7 @@ async def set_priority_number(participation: Participation):
     async with await _MongoClientSingleton().mongo_client.start_session() as session:
         async with session.start_transaction():
             try:
-                result = await MongoDatabase().counters.find_one_and_update(
+                result = await CountersCollection().find_one_and_update(
                     {"_id": today},
                     {"$inc": {"value": 1}},
                     upsert=True,
