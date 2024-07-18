@@ -8,8 +8,8 @@ from datetime import datetime
 
 from app.schemas.user import User
 from app.schemas.participation import Participation, Status
-from app.core.services.users import fetch_user_by_phone, update_user_by_phone
-from app.core.services.participations import fetch_participation_by_phone, update_participation, add_participation
+from app.core.services.users import update_user_by_phone
+from app.core.services.participations import update_participation, add_participation
 from app.core.services.tickets import upload_to_gcp
 from app.chatbot.messages import Message
 from app.chatbot.steps import Steps
@@ -44,29 +44,26 @@ class Transition(ABC):
     def get_template(self) -> str:
         return self.message_template
 
-    async def save_upload_params(self, message: Optional[Message] = None, response: Optional[str] = None):
-        user_phone = message.from_number if message else response.from_number
+    async def save_upload_params(self, user: User, participation: Participation, content: str):
+        user_phone = user.phone
         print("uploading...")
 
         for obj, params in self.upload_params.map.items():
-            if obj == User and message.body_content:
+            if obj == User and content:
                 for param in params:
                     print(
-                        f"Saving {obj} with {param} as {message.body_content}")
-                    user = await fetch_user_by_phone(user_phone)
-                    print(user)
-                    print("changing:", param, "to:", message.body_content)
-                    setattr(user, param, message.body_content)
+                        f"Saving {obj} with {param} as {content}")
+                    setattr(user, param, content)
                     user = await update_user_by_phone(user_phone, user)
                     return user
-            elif obj == Participation and message.body_content:
+            elif obj == Participation and content:
                 for param in params:
-                    participation = await fetch_participation_by_phone(user_phone)
-                    setattr(participation, param, message.body_content)
-                    await update_participation(participation)
+                    # import Participation
+                    setattr(participation, param, content)
+                    await update_participation(participation.id, participation)
             else:
                 for param in params:
-                    print(f"Save param: {param}")
+                    print(f"Should Save param: {param}")
 
 
 class WhatsAppTransition(Transition):
@@ -109,7 +106,7 @@ class MultimediaUploadTransition(WhatsAppTransition):
         self.success_step = success_step
         self.failure_step = failure_step
 
-    def execute(self, user: User, message: Message):
+    def execute(self, participation: Participation, message: Message):
         if message.num_media > 0:
             try:
                 dt = datetime.now()
@@ -120,14 +117,16 @@ class MultimediaUploadTransition(WhatsAppTransition):
                 content_type = r.headers['Content-Type']
                 # remove the whatsapp: prefix from the number
                 if content_type == 'image/jpeg':
-                    filename = f'{user.phone}/{ts}.jpg'
+                    filename = f'{participation.user.phone}/{participation.id}.jpg'
                 elif content_type == 'image/png':
-                    filename = f'{user.phone}/{ts}.png'
+                    filename = f'{participation.user.phone}/{participation.id}.png'
                 else:
                     raise Exception("Invalid file type")
 
                 if not upload_to_gcp(r.content, filename):
                     raise Exception("Failed to upload image")
+
+                message.body_content = filename
                 return self.success_step
             except Exception as e:
                 print(e)
