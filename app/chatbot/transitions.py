@@ -117,9 +117,9 @@ class MultimediaUploadTransition(WhatsAppTransition):
                 content_type = r.headers['Content-Type']
                 # remove the whatsapp: prefix from the number
                 if content_type == 'image/jpeg':
-                    filename = f'{participation.user.phone}/{participation.id}.jpg'
+                    filename = f'{participation.user.id}/{participation.id}.jpg'
                 elif content_type == 'image/png':
-                    filename = f'{participation.user.phone}/{participation.id}.png'
+                    filename = f'{participation.user.id}/{participation.id}.png'
                 else:
                     raise Exception("Invalid file type")
 
