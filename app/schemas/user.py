@@ -1,8 +1,5 @@
 from pydantic import BaseModel, Field
 from typing import Dict, Optional
-from datetime import date
-
-from app.chatbot.steps import Steps
 
 
 class UserCreation(BaseModel):
@@ -15,8 +12,8 @@ class User(BaseModel):
     terms: Optional[bool] = False
     name: Optional[str] = None
     email: Optional[str] = None
-    flow_step: str = Steps.ONBOARDING.value
-    submissions: Dict[date, int] = Field(default_factory=dict)
+    complete: bool = False
+    submissions: Dict[str, int] = Field(default_factory=dict)
 
     def to_dict(self):
         return {
@@ -25,6 +22,6 @@ class User(BaseModel):
             "terms": self.terms,
             "name": self.name,
             "email": self.email,
-            "flow_step": self.flow_step,
+            "complete": self.complete,
             "submissions": {str(k): v for k, v in self.submissions.items()}
         }

@@ -7,9 +7,9 @@ from typing import Callable
 from datetime import datetime
 
 from app.schemas.user import User
-from app.schemas.participation import Participation
+from app.schemas.participation import Participation, Status
 from app.core.services.users import fetch_user_by_phone, update_user_by_phone
-from app.core.services.participations import fetch_participation_by_phone, update_participation
+from app.core.services.participations import fetch_participation_by_phone, update_participation, add_participation
 from app.core.services.tickets import upload_to_gcp
 from app.chatbot.messages import Message
 from app.chatbot.steps import Steps
@@ -38,7 +38,7 @@ class Transition(ABC):
         self.upload_params = upload_params
 
     @abstractmethod
-    def execute(self, user: User, message: Optional[Message] = None, response: Optional[str] = None) -> str:
+    def execute(self, participation: Optional[Participation] = None, message: Optional[Message] = None, response: Optional[str] = None) -> str:
         pass
 
     def get_template(self) -> str:
@@ -79,17 +79,17 @@ class ResponseDependentTransition(WhatsAppTransition):
         super().__init__(message_template, format_args, upload_params)
         self.transitions = transitions
 
-    def execute(self, user: User, message: Message):
+    def execute(self, participation: Participation, message: Message):
         user_response = re.sub(r'[^\x00-\x7F]+', '',
                                message.body_content).lower().strip()
 
-        next_step = self.transitions.get(user_response, user.flow_step)
-        if user_response == "si acepto":
+        next_step = self.transitions.get(user_response, participation.flow)
+        if user_response == "si acepto" or user_response == "confirmar":
             message.body_content = True
         elif user_response == "no acepto":
             message.body_content = False
 
-        if next_step == user.flow_step:
+        if next_step == participation.flow:
             message.body_content = None
         return Steps(next_step)
 
@@ -99,7 +99,7 @@ class ResponseIndependentTransition(WhatsAppTransition):
         super().__init__(message_template, format_args, upload_params)
         self.next_step = next_step
 
-    def execute(self, user: User, message: Message):
+    def execute(self, participation: Participation = None, message: Message = None):
         return self.next_step
 
 
@@ -135,11 +135,17 @@ class MultimediaUploadTransition(WhatsAppTransition):
 
 
 class DashboardTransition(Transition):
-    def __init__(self, message_template: str, transitions: Optional[Dict[str, str]] = None,  format_args: Optional[ClassMapping] = None, upload_params: Optional[ClassMapping] = None):
+    def __init__(self, message_template: str, transitions: Optional[Dict[str, str]] = None,  format_args: Optional[ClassMapping] = None, upload_params: Optional[ClassMapping] = None, status: Optional[str] = None):
         super().__init__(message_template, format_args, upload_params)
         self.transitions = transitions
+        self.status = status
 
-    def execute(self, user: User, response: str):
+    async def execute(self, participation: Participation, response: str):
+        if self.status:
+            participation.status = self.status
+            await update_participation(participation.id, participation)
+        if not self.transitions:
+            return
         dashboard_response = response.body_content.lower().strip()
         next_step = self.transitions.get(
             dashboard_response, "new_participation")
@@ -147,15 +153,19 @@ class DashboardTransition(Transition):
 
 
 class ServerTransition(Transition):
-    def __init__(self, transitions: Dict[bool, str], message_template: str, action: Optional[Callable] = None, format_args: Optional[ClassMapping] = None, upload_params: Optional[ClassMapping] = None):
+    def __init__(self, transitions: Dict[bool, str], message_template: str, action: Optional[Callable] = None, format_args: Optional[ClassMapping] = None, upload_params: Optional[ClassMapping] = None, status: Optional[str] = None):
         super().__init__(message_template, format_args, upload_params)
         self.transitions = transitions
         self.action = action
+        self.status = status
 
-    def execute(self, user: User):
+    async def execute(self, participation: Participation):
+        if self.status:
+            if self.status == Status.PENDING.value:
+                await add_participation(participation)
+            participation.status = self.status
+            await update_participation(participation.id, participation)
         if not self.transitions:
             return None
-        api_response = True  # Simulated API response
-        print("sending api call to:", self.api_endpoint)
-        next_step = self.transitions.get(api_response, user.flow_step)
-        return next_step
+        result = await self.action(participation)
+        return self.transitions.get(result, participation.flow)

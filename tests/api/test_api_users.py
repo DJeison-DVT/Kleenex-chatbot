@@ -2,7 +2,6 @@ import pytest
 from httpx import AsyncClient
 
 from app.core.config import settings
-from app.chatbot.steps import Steps
 
 SECTION = "/users/"
 FULL_URL = settings.BASE_URL + settings.API_STR + SECTION
@@ -140,7 +139,7 @@ async def test_put_user_registration():
         assert user['terms'] == True
         assert user['name'] == "Jane Doe"
         assert user['email'] == "jane.doe@gmail.com"
-        assert user['flow_step'] == "onboarding"
+        assert user['complete'] == False
 
         response = await client.delete(FULL_URL + "1234567890")
         assert response.status_code == 204
@@ -169,19 +168,17 @@ async def test_put_user_flow():
         assert user['terms'] == False
         assert user['name'] == "Jane Doe"
         assert user['email'] == "jane.doe@gmail.com"
+        assert user['complete'] == False
 
-        assert user['flow_step'] == "onboarding"
-
-        test_steps = [step.value for step in Steps]
-        test_steps.pop(0)
-        for step in test_steps:
-
-            user['flow_step'] = step
+        test_status = [status for status in [True, False]]
+        test_status.pop(0)
+        for status in test_status:
+            user['complete'] = status
             response = await client.put(FULL_URL + "1234567890", json=user)
             assert response.status_code == 200
             user = response.json()
             assert user['phone'] == "1234567890"
-            assert user['flow_step'] == step
+            assert user['complete'] == status
 
         response = await client.delete(FULL_URL + "1234567890")
         assert response.status_code == 204

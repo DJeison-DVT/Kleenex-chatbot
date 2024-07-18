@@ -7,6 +7,7 @@ from app.utils.decorators import check_existence, validate_object_id
 from app.schemas.participation import Participation, ParticipationCreation
 from app.serializers.participation import serialize_participations, serialize_participation
 from app.core.services.participations import *
+from app.core.services.priority_number import count_participations
 
 router = APIRouter()
 
@@ -20,7 +21,11 @@ async def get_participation_by_id(id: str):
 
 @check_existence
 async def get_participations(limit: int, date: datetime, phone: str, status: str):
-    participations = await fetch_participations(limit, date, phone, status)
+    try:
+        participations = await fetch_participations(limit, date, phone, status)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Unexpected error: {e}")
+    print(participations)
     return serialize_participations(participations)
 
 
@@ -49,7 +54,7 @@ async def fetch_all_participations(
 @router.get("/count")
 async def api_count_participations(
     date: Optional[datetime] = Query(
-        datetime.now(timezone.utc).date(), description="Filter participations by date"),
+        datetime.now(timezone.utc), description="Filter participations by date"),
 ):
     count = await count_participations(date)
     return {"count": count}

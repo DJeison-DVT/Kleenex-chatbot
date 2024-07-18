@@ -1,8 +1,9 @@
 from typing import List
+from datetime import datetime
 
 from app.schemas.user import User, UserCreation
-from app.db.db import UsersCollection
-from app.chatbot.steps import Steps
+from app.db.db import UsersCollection, ParticipationsCollection, _MongoClientSingleton
+from app.core.config import settings
 
 
 async def fetch_users() -> List[User]:
@@ -29,7 +30,7 @@ async def create_user(user: UserCreation) -> User:
         raise ValueError("Phone number is required")
 
     try:
-        result = await UsersCollection().insert_one({"phone": phone, "terms": False, "flow_step": Steps.ONBOARDING.value})
+        result = await UsersCollection().insert_one({"phone": phone, "terms": False, "complete": False})
     except AttributeError as e:
         raise ValueError(f"Error: {e}")
     except Exception as e:
@@ -50,7 +51,16 @@ async def update_user_by_phone(phone: str, user: User) -> User:
     new_user.pop("_id", None)
 
     try:
-        await UsersCollection().update_one({"_id": id}, {"$set": new_user})
+        async with await _MongoClientSingleton().mongo_client.start_session() as session:
+            async with session.start_transaction():
+                await UsersCollection().update_one({"_id": id}, {"$set": new_user}, session=session)
+
+                new_user["_id"] = str(id)
+                await ParticipationsCollection().update_many(
+                    {"user.phone": user.phone},
+                    {"$set": {"user": new_user}},
+                    session=session
+                )
     except Exception as e:
         raise ValueError(f"Error: {e}")
 
@@ -65,3 +75,15 @@ async def delete_user_by_phone(phone: str):
         raise ValueError("User not found")
 
     await UsersCollection().delete_one({"phone": phone})
+
+
+def can_participate(user: User) -> bool:
+    today = datetime.now().strftime("%Y-%m-%d")
+    submissions = user.submissions.get(today, 0)
+    print(f"Submissions: {submissions}")
+    print(f"Settings: {settings.DAILY_PARTICIPAITONS}")
+
+    print(f"{submissions >= settings.DAILY_PARTICIPAITONS} {submissions} >= {settings.DAILY_PARTICIPAITONS}")
+    if submissions >= settings.DAILY_PARTICIPAITONS:
+        return False
+    return True

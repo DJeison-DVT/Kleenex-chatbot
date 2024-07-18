@@ -58,7 +58,7 @@ async def test_api_fetch_participation_by_id():
 @pytest.mark.asyncio
 async def test_api_delete_participation_by_id():
     async with AsyncClient() as client:
-        user_phones = ["1234567890", "0987654321"]
+        user_phones = [PHONE, "0987654321"]
         users = [{"phone": phone}
                  for phone in user_phones]
 
@@ -77,12 +77,15 @@ async def test_api_delete_participation_by_id():
             participations = response.json()
             length = len(participations)
 
+        created_participations = []
+
         # create 3 participations for each user
         PARTICIPATIONS_PER_USER = 3
         for user in clients:
             for _ in range(PARTICIPATIONS_PER_USER):
                 response = await client.post(FULL_URL, json={"user": user})
                 assert response.status_code == 201
+                created_participations.append(response.json())
 
         response = await client.get(FULL_URL)
         assert response.status_code == 200
@@ -91,7 +94,7 @@ async def test_api_delete_participation_by_id():
         assert len(participations) == length + \
             len(users) * PARTICIPATIONS_PER_USER
 
-        for participation in participations:
+        for participation in created_participations:
             response = await client.delete(FULL_URL + participation["_id"])
             assert response.status_code == 204
 
@@ -127,7 +130,7 @@ async def test_api_update_participation_by_id():
         assert participation["user"] == user
         assert participation["ticket_url"] is None
         assert participation["ticket_attempts"] == 0
-        assert participation["participationNumber"] == -1
+        assert participation["priority_number"] == -1
 
         # update participation
         participation["status"] = "COMPLETE"
@@ -173,24 +176,24 @@ async def test_api_put_flow_prize():
         assert participation['ticket_attempts'] == 1
         assert participation['status'] == 'INCOMPLETE'
 
-        participation['participationNumber'] = PARTICIPATION_NO
+        participation['priority_number'] = PARTICIPATION_NO
         participation['status'] = 'COMPLETE'
-        participation['prizeType'] = 'digital'
+        participation['prize'] = 'digital'
         response = await client.put(FULL_URL + participation["_id"], json=participation)
         assert response.status_code == 200
 
         participation = response.json()
         assert participation['status'] == 'COMPLETE'
-        assert participation['prizeType'] == 'digital'
-        assert participation['participationNumber'] == PARTICIPATION_NO
+        assert participation['prize'] == 'digital'
+        assert participation['priority_number'] == PARTICIPATION_NO
 
         response = await client.get(FULL_URL + participation["_id"])
         assert response.status_code == 200
 
         participation = response.json()
         assert participation['status'] == 'COMPLETE'
-        assert participation['prizeType'] == 'digital'
-        assert participation['participationNumber'] == PARTICIPATION_NO
+        assert participation['prize'] == 'digital'
+        assert participation['priority_number'] == PARTICIPATION_NO
         assert participation['ticket_url'] == TICKET_URL
         assert participation['ticket_attempts'] == 1
 
@@ -233,16 +236,16 @@ async def test_api_put_flow_no_prize():
 
         participation = response.json()
         assert participation['status'] == 'COMPLETE'
-        assert participation['prizeType'] is None
-        assert participation['participationNumber'] == -1
+        assert participation['prize'] is None
+        assert participation['priority_number'] == -1
 
         response = await client.get(FULL_URL + participation["_id"])
         assert response.status_code == 200
 
         participation = response.json()
         assert participation['status'] == 'COMPLETE'
-        assert participation['prizeType'] is None
-        assert participation['participationNumber'] == -1
+        assert participation['prize'] is None
+        assert participation['priority_number'] == -1
         assert participation['ticket_url'] == TICKET_URL
         assert participation['ticket_attempts'] == 1
 

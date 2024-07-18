@@ -33,6 +33,8 @@ class Settings(BaseSettings):
     TWILIO_MESSAGING_SERVICE_SID: str
     GCP_BUCKET_CREDENTIALS: str
     TICKET_BUCKET_NAME: str
+    INVALID_PHOTO_MAX_OPPORTUNITIES: int = 3
+    DAILY_PARTICIPAITONS: int = 5
 
     model_config = SettingsConfigDict(
         env_file='.env', env_file_encoding='utf-8')

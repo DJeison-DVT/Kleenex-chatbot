@@ -1,11 +1,9 @@
 from app.chatbot.steps import Steps
 from app.schemas.user import User
-from app.schemas.participation import Participation
+from app.schemas.participation import Participation, Status
 from app.chatbot.transitions import *
-from app.core.services.priority_number import get_priority_number
+from app.core.services.priority_number import set_priority_number
 
-INVALID_PHOTO_MAX_OPPORTUNITIES = 3
-DAILTY_PARTICIPAITONS = 5
 
 FLOW = {
     Steps.ONBOARDING: ResponseDependentTransition(
@@ -29,9 +27,20 @@ FLOW = {
         failure_step=Steps.ONBOARDING_INVALID_PHOTO,
         message_template='HX0958631a027c2144d92996efbdf5fbdc'
     ),
+    Steps.VALIDATE_PHOTO: MultimediaUploadTransition(
+        success_step=Steps.PRIORITY_NUMBER,
+        failure_step=Steps.INVALID_PHOTO,
+        message_template='HX842b1bcba42432bd76984e35a3c406c8',
+        format_args=ClassMapping([(None, 'current_participations')]),
+    ),
     Steps.ONBOARDING_INVALID_PHOTO: MultimediaUploadTransition(
         success_step=Steps.ONBOARDING_NAME,
         failure_step=Steps.ONBOARDING_INVALID_PHOTO,
+        message_template='HX2158e4b989cc8436f1c0eba4fdf45dc7'
+    ),
+    Steps.INVALID_PHOTO: MultimediaUploadTransition(
+        success_step=Steps.PRIORITY_NUMBER,
+        failure_step=Steps.INVALID_PHOTO,
         message_template='HX2158e4b989cc8436f1c0eba4fdf45dc7'
     ),
     Steps.ONBOARDING_NAME: ResponseIndependentTransition(
@@ -50,6 +59,7 @@ FLOW = {
             'editar': Steps.ONBOARDING_NAME,
         },
         message_template='HX4fe9cbfa17572324cda8df6e4780b519',
+        upload_params=ClassMapping([(User, 'complete')]),
         format_args=ClassMapping([(User, 'name'), (User, 'email')])
     ),
     Steps.PRIORITY_NUMBER: ServerTransition(
@@ -57,15 +67,15 @@ FLOW = {
             True: Steps.DASHBOARD_WAITING,
             False: Steps.NO_PRIZE,
         },
-        action=get_priority_number(),
+        action=set_priority_number,
         message_template='HX04cb615e50500f09dea065f819a26b10',
-        upload_params=ClassMapping([(Participation, 'priority_number')])
+        status=Status.PENDING.value
     ),
     Steps.NO_PRIZE: ServerTransition(
         transitions=None,
         message_template='HX9129b50ae4c409e207caace3e00f991f',
         format_args=ClassMapping([(Participation, 'priority_number')]),
-        upload_params=ClassMapping([(Participation, 'status')])
+        status=Status.COMPLETE.value
     ),
     Steps.DASHBOARD_WAITING: DashboardTransition(
         transitions={
@@ -83,9 +93,19 @@ FLOW = {
             (Participation, 'priority_number'),
             (Participation, 'prize_url'),
             (Participation, 'prize_code')
-        ])
+        ]),
+        status=Status.COMPLETE.value
     ),
     Steps.DASHBOARD_REJECTION: DashboardTransition(
-        message_template='HX07c4758573a8f0dc490e45c604a7a55f'
-    )
+        message_template='HX07c4758573a8f0dc490e45c604a7a55f',
+        status=Status.REJECTED.value
+    ),
+    Steps.NEW_PARTICIPATION: ResponseIndependentTransition(
+        next_step=Steps.VALIDATE_PHOTO,
+        message_template='HX842b1bcba42432bd76984e35a3c406c8',
+    ),
+    Steps.MAX_PARTICIPATIONS: ServerTransition(
+        transitions=None,
+        message_template='HX4fa1b484f4549d844bb2489db9bf21d8',
+    ),
 }

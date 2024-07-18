@@ -29,5 +29,17 @@ def ParticipationsCollection() -> AgnosticDatabase:
     return MongoDatabase().participations
 
 
+def CountersCollection() -> AgnosticDatabase:
+    return MongoDatabase().counters
+
+
+def PrizesCollection() -> AgnosticDatabase:
+    return MongoDatabase().prizes
+
+
+def PrizeCodesCollection() -> AgnosticDatabase:
+    return MongoDatabase().prize_codes
+
+
 async def ping():
     await MongoDatabase().command("ping")
