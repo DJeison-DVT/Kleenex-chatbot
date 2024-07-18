@@ -131,10 +131,14 @@ class FlowManager:
                 if transition.upload_params:
                     await self.handle_upload_params(transition=transition, message=message)
         elif isinstance(transition, DashboardTransition):
+            print("dashboard_transition")
+            print(response)
             if response:
                 print("Handling response")
-                next_step = transition.execute(response=response)
+                next_step = await transition.execute(
+                    participation=self.participation, response=response)
                 if transition.upload_params:
+                    print("uploading params")
                     await self.handle_upload_params(transition=transition, response=response)
 
         transition = self.flow.get(Steps(next_step), transition)
@@ -151,6 +155,8 @@ class FlowManager:
                 await self.execute(response=next_step)
         elif isinstance(transition, DashboardTransition):
             print("Handling dashboard transition")
+            await self.handle_message(transition)
+            await self.update_user_flow(next_step)
         else:
             print("Handling normal transition")
             await self.handle_message(transition)

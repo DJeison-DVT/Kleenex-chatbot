@@ -30,6 +30,7 @@ class Participation(BaseModel):
     status: Status = Status.INCOMPLETE
     prize: Optional[str] = None
     flow: str = Steps.ONBOARDING.value
+    serial_number: Optional[str] = None
 
     def to_dict(self):
         return {
@@ -41,5 +42,6 @@ class Participation(BaseModel):
             "datetime": self.datetime,
             "status": self.status,
             "prize": self.prize,
-            "flow": self.flow
+            "flow": self.flow,
+            "serial_number": self.serial_number,
         }

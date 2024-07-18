@@ -107,6 +107,27 @@ async def create_participation(
     return Participation(**new_participation)
 
 
+async def accept_participation(participation: Participation, serial_number: str) -> bool:
+    id = ObjectId(participation.id)
+    if participation.serial_number:
+        raise Exception("Serial number already set")
+
+    existing = await ParticipationsCollection().find_one({"serial_number": serial_number})
+    if existing:
+        raise ValueError("Duplicate Serial Number")
+
+    try:
+        await ParticipationsCollection().update_one(
+            {"_id": id},
+            {"$set": {
+                "serial_number": serial_number,
+            }}
+        )
+    except Exception as e:
+        raise e
+    return True
+
+
 async def update_participation(id: str, participation: Participation):
     if not ObjectId.is_valid(id):
         raise ValueError("Invalid ID")

@@ -126,10 +126,7 @@ class DashboardTransition(Transition):
             await update_participation(participation.id, participation)
         if not self.transitions:
             return
-        dashboard_response = response.body_content.lower().strip()
-        next_step = self.transitions.get(
-            dashboard_response, "new_participation")
-        return next_step
+        return self.transitions.get(response, participation.status)
 
 
 class ServerTransition(Transition):

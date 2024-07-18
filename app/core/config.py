@@ -22,6 +22,7 @@ class Settings(BaseSettings):
     BASE_URL: str
     USER_SECTION: str = "/users"
     PARTICIPATION_SECTION: str = "/participations"
+    DASHBOARD_SECTION: str = "/dashboard"
     BACKEND_CORS_ORIGINS: Annotated[
         list[AnyHttpUrl] | str, BeforeValidator(parse_cors)
     ] = []
