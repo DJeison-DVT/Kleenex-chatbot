@@ -79,24 +79,20 @@ FLOW = {
     ),
     Steps.DASHBOARD_WAITING: DashboardTransition(
         transitions={
-            'valid': Steps.DASHBOARD_CONFIRMATION,
-            'invalid': Steps.DASHBOARD_REJECTION,
+            True: Steps.DASHBOARD_CONFIRMATION,
+            False: Steps.DASHBOARD_REJECTION,
         },
         message_template='HXf5e5575d9a622b9f6c396797433f4688',
         format_args=ClassMapping(
             [(Participation, 'priority_number'), (Participation, 'prize_name')])
     ),
-    Steps.DASHBOARD_CONFIRMATION: DashboardTransition(
+    Steps.DASHBOARD_CONFIRMATION: ServerTransition(
+        transitions=None,
         message_template='HXaccd22243567d67d646ef272416481f9',
-        format_args=ClassMapping([
-            (Participation, 'prize_amount'),
-            (Participation, 'priority_number'),
-            (Participation, 'prize_url'),
-            (Participation, 'prize_code')
-        ]),
-        status=Status.COMPLETE.value
+        status=Status.APPROVED.value
     ),
-    Steps.DASHBOARD_REJECTION: DashboardTransition(
+    Steps.DASHBOARD_REJECTION: ServerTransition(
+        transitions=None,
         message_template='HX07c4758573a8f0dc490e45c604a7a55f',
         status=Status.REJECTED.value
     ),

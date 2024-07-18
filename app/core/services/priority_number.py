@@ -7,6 +7,7 @@ from app.schemas.participation import Participation, Status
 
 
 async def count_participations(date: datetime = datetime.now()) -> int:
+    print(date)
     date = date.strftime("%Y-%m-%d")
     count = await CountersCollection().find_one({"_id": date})
     return count["value"] if count else 0
@@ -38,7 +39,7 @@ async def set_priority_number(participation: Participation):
                 priority_number = result["value"]
                 participation.priority_number = priority_number
                 participation.status = Status.COMPLETE.value
-                participation.prize = await get_prize(priority_number, today, session)
+                participation.prize = await get_prize(priority_number, datetime.now(), session)
 
                 object_id = ObjectId(participation.id)
                 updated_participation = participation.to_dict()
