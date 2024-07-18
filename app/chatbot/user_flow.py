@@ -5,7 +5,7 @@ from app.schemas.user import User, UserCreation
 from app.schemas.participation import Participation, Status
 from app.chatbot.messages import Message, send_message
 from app.chatbot.steps import Steps
-from app.core.services.users import update_user_by_phone, create_user, fetch_user_by_phone, can_participate
+from app.core.services.users import create_user, fetch_user_by_phone, can_participate
 from app.core.services.participations import ParticipationCreation, create_participation, fetch_participations, update_participation
 from app.core.services.priority_number import count_participations
 from app.chatbot.transitions import Transition, WhatsAppTransition, DashboardTransition, ServerTransition
@@ -110,8 +110,8 @@ class FlowManager:
 
     async def handle_upload_params(self,  transition, message: Optional[Message] = None, response: Optional[str] = None):
         if transition.upload_params:
-            sending = message if message else response
-            object = await transition.save_upload_params(sending)
+            content = message.body_content if message else response
+            object = await transition.save_upload_params(self.user, self.participation, content)
             if isinstance(object, User):
                 self.user = object
 

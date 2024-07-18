@@ -25,23 +25,27 @@ FLOW = {
     Steps.ONBOARDING_PHOTO: MultimediaUploadTransition(
         success_step=Steps.ONBOARDING_NAME,
         failure_step=Steps.ONBOARDING_INVALID_PHOTO,
-        message_template='HX0958631a027c2144d92996efbdf5fbdc'
+        message_template='HX0958631a027c2144d92996efbdf5fbdc',
+        upload_params=ClassMapping([(Participation, 'ticket_url')]),
     ),
     Steps.VALIDATE_PHOTO: MultimediaUploadTransition(
         success_step=Steps.PRIORITY_NUMBER,
         failure_step=Steps.INVALID_PHOTO,
         message_template='HX842b1bcba42432bd76984e35a3c406c8',
         format_args=ClassMapping([(None, 'current_participations')]),
+        upload_params=ClassMapping([(Participation, 'ticket_url')]),
     ),
     Steps.ONBOARDING_INVALID_PHOTO: MultimediaUploadTransition(
         success_step=Steps.ONBOARDING_NAME,
         failure_step=Steps.ONBOARDING_INVALID_PHOTO,
-        message_template='HX2158e4b989cc8436f1c0eba4fdf45dc7'
+        message_template='HX2158e4b989cc8436f1c0eba4fdf45dc7',
+        upload_params=ClassMapping([(Participation, 'ticket_url')]),
     ),
     Steps.INVALID_PHOTO: MultimediaUploadTransition(
         success_step=Steps.PRIORITY_NUMBER,
         failure_step=Steps.INVALID_PHOTO,
-        message_template='HX2158e4b989cc8436f1c0eba4fdf45dc7'
+        message_template='HX2158e4b989cc8436f1c0eba4fdf45dc7',
+        upload_params=ClassMapping([(Participation, 'ticket_url')]),
     ),
     Steps.ONBOARDING_NAME: ResponseIndependentTransition(
         next_step=Steps.ONBOARDING_EMAIL,
