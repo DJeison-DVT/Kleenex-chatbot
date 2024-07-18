@@ -1,14 +1,16 @@
-
+import requests
 import re
 from abc import ABC, abstractmethod
 from typing import Optional, Dict, List, Tuple
 from collections import defaultdict
 from typing import Callable
+from datetime import datetime
 
 from app.schemas.user import User
 from app.schemas.participation import Participation
 from app.core.services.users import fetch_user_by_phone, update_user_by_phone
 from app.core.services.participations import fetch_participation_by_phone, update_participation
+from app.core.services.tickets import upload_to_gcp
 from app.chatbot.messages import Message
 from app.chatbot.steps import Steps
 
@@ -109,7 +111,26 @@ class MultimediaUploadTransition(WhatsAppTransition):
 
     def execute(self, user: User, message: Message):
         if message.num_media > 0:
-            return self.success_step
+            try:
+                dt = datetime.now()
+                ts = datetime.timestamp(dt)
+
+                media_url = message.media_urls[0]
+                r = requests.get(media_url)
+                content_type = r.headers['Content-Type']
+                # remove the whatsapp: prefix from the number
+                if content_type == 'image/jpeg':
+                    filename = f'{user.phone}/{ts}.jpg'
+                elif content_type == 'image/png':
+                    filename = f'{user.phone}/{ts}.png'
+                else:
+                    raise Exception("Invalid file type")
+
+                if not upload_to_gcp(r.content, filename):
+                    raise Exception("Failed to upload image")
+                return self.success_step
+            except Exception as e:
+                print(e)
         return self.failure_step
 
 

@@ -31,6 +31,8 @@ class Settings(BaseSettings):
     TWILIO_ACCOUNT_SID: str
     TWILIO_AUTH_TOKEN: str
     TWILIO_MESSAGING_SERVICE_SID: str
+    GCP_BUCKET_CREDENTIALS: str
+    TICKET_BUCKET_NAME: str
 
     model_config = SettingsConfigDict(
         env_file='.env', env_file_encoding='utf-8')
