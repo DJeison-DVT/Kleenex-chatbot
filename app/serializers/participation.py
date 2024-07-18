@@ -13,6 +13,7 @@ def serialize_participation(participation: Participation):
         "status": participation.status,
         "prize": participation.prize,
         "flow": participation.flow,
+        "serial_number": participation.serial_number,
     }
 
 
