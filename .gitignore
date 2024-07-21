@@ -7,3 +7,5 @@ venv*
 
 media*
 downloaded_media/
+
+*.json

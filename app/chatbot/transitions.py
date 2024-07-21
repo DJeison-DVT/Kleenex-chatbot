@@ -109,9 +109,7 @@ class MultimediaUploadTransition(WhatsAppTransition):
     def execute(self, participation: Participation, message: Message):
         if message.num_media > 0:
             try:
-                dt = datetime.now()
-                ts = datetime.timestamp(dt)
-
+                print(message.media_urls)
                 media_url = message.media_urls[0]
                 r = requests.get(media_url)
                 content_type = r.headers['Content-Type']

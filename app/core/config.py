@@ -32,7 +32,7 @@ class Settings(BaseSettings):
     TWILIO_ACCOUNT_SID: str
     TWILIO_AUTH_TOKEN: str
     TWILIO_MESSAGING_SERVICE_SID: str
-    GCP_BUCKET_CREDENTIALS: str
+    GCP_BUCKET_CREDENTIALS_ADDRESS: str = "gcp_bucket_credentials.json"
     TICKET_BUCKET_NAME: str
     INVALID_PHOTO_MAX_OPPORTUNITIES: int = 3
     DAILY_PARTICIPAITONS: int = 5

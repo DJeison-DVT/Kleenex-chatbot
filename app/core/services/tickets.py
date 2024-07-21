@@ -18,19 +18,29 @@ def upload_to_gcp(photo_content: bytes, destination_blob_name: str):
         str: The path of the uploaded blob in the bucket.
     """
     try:
-        credentials_info = json.loads(settings.GCP_BUCKET_CREDENTIALS)
-        credentials = service_account.Credentials.from_service_account_info(
-            credentials_info)
+        credentials = None
+        try:
+            with open(settings.GCP_BUCKET_CREDENTIALS_ADDRESS, 'r') as f:
+                credentials_info = json.load(f)
+            print(credentials_info)
+            credentials = service_account.Credentials.from_service_account_info(
+                credentials_info)
+        except Exception as e:
+            print(e)
+            raise Exception("Invalid GCP credentials")
 
         # Initialize the Cloud Storage client with the credentials
         gcp_client = storage.Client(credentials=credentials)
 
+        print("Uploading file to GCP bucket...")
         # Get the bucket
         bucket = gcp_client.bucket(settings.TICKET_BUCKET_NAME)
 
+        print(f"Uploading file to {destination_blob_name}...")
         # Create a blob object
         blob = bucket.blob(destination_blob_name)
 
+        print(f"Uploading as image to {destination_blob_name}...")
         # Upload the photo content to the bucket
         blob.upload_from_string(photo_content, content_type='image/jpeg')
 

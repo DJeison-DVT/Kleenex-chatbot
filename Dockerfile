@@ -31,6 +31,9 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy the entire application to the container
 COPY . .
 
+# Copy the GCP bucket credentials file
+COPY ../gcp_bucket_credentials.json /app/
+
 # Expose the port the application runs on
 EXPOSE 8080
 
