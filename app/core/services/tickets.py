@@ -1,5 +1,6 @@
 import json
 import requests
+import base64
 from google.cloud import storage
 from google.oauth2 import service_account
 
@@ -21,6 +22,8 @@ def upload_to_gcp(photo_content: bytes, destination_blob_name: str):
         credentials = None
         try:
             with open(settings.GCP_BUCKET_CREDENTIALS_ADDRESS, 'r') as f:
+                print("Reading GCP credentials...")
+                print(f.read())
                 credentials_info = json.load(f)
             print(credentials_info)
             credentials = service_account.Credentials.from_service_account_info(
