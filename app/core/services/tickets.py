@@ -23,7 +23,6 @@ def upload_to_gcp(photo_content: bytes, destination_blob_name: str):
         try:
             with open(settings.GCP_BUCKET_CREDENTIALS_ADDRESS, 'r') as f:
                 print("Reading GCP credentials...")
-                print(f.read())
                 credentials_info = json.load(f)
             print(credentials_info)
             credentials = service_account.Credentials.from_service_account_info(
