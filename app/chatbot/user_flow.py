@@ -97,6 +97,12 @@ class FlowManager:
                         if param == "current_participations":
                             ticket_count = await count_participations()
                             args[str(count)] = str(ticket_count)
+                        elif param == "participation_address":
+                            # TODO: wait for an address to be designated
+                            args[str(count)] = "https://demente.com.mx/participation"
+                        elif param == "prize_code":
+                            # TODO: wait for a prize code to be assigned
+                            args[str(count)] = "1234"
                     else:
                         args[str(count)] = f"{param}"
                     count += 1
@@ -146,12 +152,12 @@ class FlowManager:
         if isinstance(transition, ServerTransition):
             print("Handling server transition")
             # sleep for 3 sec
+            old_step = next_step
             next_step = await transition.execute(participation=self.participation)
-            if not next_step:
-                await self.handle_message(transition)
-            else:
-                await self.update_user_flow(next_step)
-                await self.handle_message(transition)
+            print("Next step", next_step or transition)
+            await self.update_user_flow(next_step or old_step)
+            await self.handle_message(transition)
+            if next_step:
                 await self.execute(response=next_step)
         elif isinstance(transition, DashboardTransition):
             print("Handling dashboard transition")
