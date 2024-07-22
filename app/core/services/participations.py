@@ -114,6 +114,10 @@ async def create_participation(
 
 async def accept_participation(participation: Participation, serial_number: str) -> bool:
     id = ObjectId(participation.id)
+
+    if not serial_number:
+        return 'rejected'
+
     if participation.serial_number:
         raise Exception("Serial number already set")
 
@@ -122,6 +126,7 @@ async def accept_participation(participation: Participation, serial_number: str)
         raise ValueError("Duplicate Serial Number")
 
     try:
+        participation.serial_number = serial_number
         await ParticipationsCollection().update_one(
             {"_id": id},
             {"$set": {
@@ -130,7 +135,7 @@ async def accept_participation(participation: Participation, serial_number: str)
         )
     except Exception as e:
         raise e
-    return True
+    return 'accepted'
 
 
 async def update_participation(id: str, participation: Participation):
