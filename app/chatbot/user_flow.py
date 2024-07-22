@@ -133,8 +133,8 @@ class FlowManager:
         elif isinstance(transition, DashboardTransition):
             print("dashboard_transition")
             print(response)
-            if response:
-                print("Handling response")
+            if response and isinstance(response, str):
+                print("Handling response", response)
                 next_step = await transition.execute(
                     participation=self.participation, response=response)
                 if transition.upload_params:

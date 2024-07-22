@@ -88,7 +88,7 @@ FLOW = {
         },
         message_template='HXf5e5575d9a622b9f6c396797433f4688',
         format_args=ClassMapping(
-            [(Participation, 'priority_number'), (Participation, 'prize_name')])
+            [(Participation, 'prize'), (Participation, 'priority_number')])
     ),
     Steps.DASHBOARD_CONFIRMATION: ServerTransition(
         transitions=None,

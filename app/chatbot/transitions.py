@@ -161,5 +161,4 @@ class ServerTransition(Transition):
             await update_participation(participation.id, participation)
         if not self.transitions:
             return None
-        result = await self.action(participation)
-        return self.transitions.get(result, participation.flow)
+        return self.transitions.get(await self.action(participation), participation.flow)

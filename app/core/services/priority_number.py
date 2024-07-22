@@ -20,7 +20,7 @@ async def get_prize(priority_number: int, date: datetime, session) -> Dict:
         {"$set": {"taken": True}},
         session=session,
     )
-    return prize["prize"] if prize else None
+    return prize["type"] if prize else None
 
 
 async def set_priority_number(participation: Participation):
