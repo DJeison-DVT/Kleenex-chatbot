@@ -29,6 +29,10 @@ async def handle_accept(ticket_id, serial_number):
 
 @router.post("/accept")
 async def accept(request: AcceptRequest, response: Response):
+    response.headers["Access-Control-Allow-Origin"] = "*"
+    response.headers["Access-Control-Allow-Methods"] = "POST, OPTIONS"
+    response.headers["Access-Control-Allow-Headers"] = "Content-Type"
+
     try:
         ticket_id = request.ticket_id
         serial_number = request.serial_number
