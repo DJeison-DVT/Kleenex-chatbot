@@ -39,7 +39,7 @@ async def get_participation_by_phone(phone: str):
 @check_existence
 async def fetch_all_participations(
     limit: Optional[int] = Query(
-        10, description="Limit the number of participations returned"),
+        None, description="Limit the number of participations returned"),
     date: Optional[datetime] = Query(
         None, description="Filter participations by date"),
     phone: Optional[str] = Query(

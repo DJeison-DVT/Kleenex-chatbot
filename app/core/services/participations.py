@@ -30,7 +30,12 @@ async def fetch_participations(
     if status:
         query["status"] = status
 
-    cursor = ParticipationsCollection().find(query).limit(limit)
+
+    cursor = ParticipationsCollection().find(query)
+
+    if limit:
+        cursor = cursor.limit(limit)
+
     participations = []
     async for participation in cursor:
         participation["_id"] = str(participation["_id"])
