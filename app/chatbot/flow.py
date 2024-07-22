@@ -77,7 +77,7 @@ FLOW = {
     ),
     Steps.NO_PRIZE: ServerTransition(
         transitions=None,
-        message_template='HX9129b50ae4c409e207caace3e00f991f',
+        message_template='HX4ba8a939514b4ee68a4d092e6dd9e2f8',
         format_args=ClassMapping([(Participation, 'priority_number')]),
         status=Status.FULLFILED.value
     ),
