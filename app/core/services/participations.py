@@ -12,7 +12,7 @@ from app.core.services.users import fetch_user_by_phone, update_user_by_phone
 
 
 async def fetch_participations(
-    limit: int = 10,
+    limit: Optional[int] = None,
     date: Optional[datetime] = None,
     phone: Optional[str] = None,
     status: Optional[str] = None
