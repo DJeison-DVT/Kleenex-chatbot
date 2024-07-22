@@ -12,6 +12,7 @@ router = APIRouter()
 class AcceptRequest(BaseModel):
     ticket_id: str
     serial_number: str | None = None
+    rejection_reason: str | None = None
 
 
 async def handle_accept(ticket_id, serial_number):
@@ -46,5 +47,19 @@ async def accept(request: AcceptRequest, response: Response):
             return HTTPException(status_code=400, detail=str(e))
         print(e)
 
+        response.status_code = 500
+        return HTTPException(status_code=500, detail="Internal server error")
+
+@router.post("/reject")
+async def reject(request: AcceptRequest, response: Response):
+    response.headers["Access-Control-Allow-Origin"] = "*"
+    response.headers["Access-Control-Allow-Methods"] = "POST, OPTIONS"
+    response.headers["Access-Control-Allow-Headers"] = "Content-Type"
+
+    try:
+        ticket_id = request.ticket_id
+        reason = request.rejection_reason
+        return await handle_accept(ticket_id, None)
+    except Exception as e:
         response.status_code = 500
         return HTTPException(status_code=500, detail="Internal server error")
