@@ -34,13 +34,19 @@ jobs:
         with:
           credentials_json: "${{ secrets.GCP_CREDENTIALS }}" # Replace with the name of your GitHub Actions secret
 
-      - name: Write GCP Bucket Credentials
+      - name: Inject GCP Bucket Credentials
         run: echo "${{ secrets.GCP_BUCKET_CREDENTIALS }}" | base64 --decode > gcp_bucket_credentials.json
 
-      - name: Print GCP Bucket Credentials
-        run: |
-          echo "Contents of gcp_bucket_credentials.json:"
-          cat gcp_bucket_credentials.json
+      - name: Print All Secrets
+        run: |-
+          echo "GCP_CREDENTIALS: ${{ secrets.GCP_CREDENTIALS }}"
+          echo "GCP_BUCKET_CREDENTIALS: ${{ secrets.GCP_BUCKET_CREDENTIALS }}"
+          echo "MONGO_URI: ${{ secrets.MONGO_URI }}"
+          echo "TWILIO_ACCOUNT_SID: ${{ secrets.TWILIO_ACCOUNT_SID }}"
+          echo "TWILIO_AUTH_TOKEN: ${{ secrets.TWILIO_AUTH_TOKEN }}"
+          echo "TWILIO_MESSAGING_SERVICE_SID: ${{ secrets.TWILIO_MESSAGING_SERVICE_SID }}"
+          echo "BASE_URL: ${{ secrets.BASE_URL }}"
+          echo "TICKET_BUCKET_NAME: ${{ secrets.TICKET_BUCKET_NAME }}"
 
       - name: Show App Structure
         run: ls -la
