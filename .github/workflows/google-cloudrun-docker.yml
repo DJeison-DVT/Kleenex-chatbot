@@ -42,6 +42,7 @@ jobs:
                   echo "Contents of gcp_bucket_credentials.json:"
                   cat gcp_bucket_credentials.json
 
+
             - name: Show App Structure
               run: ls -la
 
