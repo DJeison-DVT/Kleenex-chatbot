@@ -31,6 +31,7 @@ class Participation(BaseModel):
     prize: Optional[str] = None
     flow: str = Steps.ONBOARDING.value
     serial_number: Optional[str] = None
+    rejection_reason: Optional[str] = None
 
     def to_dict(self):
         return {
@@ -44,4 +45,5 @@ class Participation(BaseModel):
             "prize": self.prize,
             "flow": self.flow,
             "serial_number": self.serial_number,
+            "rejection_reason": self.rejection_reason,
         }
