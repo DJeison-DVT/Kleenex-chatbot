@@ -24,7 +24,16 @@ def get_password_hash(password):
 
 async def get_user(username: str):
     user = await DashboardUsers().find_one({"username": username})
-    return UserInDB(**user) if user else None
+    return DashboardUserInDB(**user) if user else None
+
+
+async def create_user(user: DashboardUserCreate):
+    hashed_password = get_password_hash(user.password)
+    user_dict = user.model_dump()
+    user_dict["hashed_password"] = hashed_password
+    del user_dict["password"]
+    await DashboardUsers().insert_one(user_dict)
+    return DashboardUser(**user_dict)
 
 
 async def authenticate_user(username: str, password: str):
@@ -73,7 +82,7 @@ class RoleChecker:
     def __init__(self, allowed_roles):
         self.allowed_roles = allowed_roles
 
-    def __call__(self, user: Annotated[User, Depends(get_current_user)]):
+    def __call__(self, user: Annotated[DashboardUser, Depends(get_current_user)]):
         if user.role in self.allowed_roles:
             return True
         raise HTTPException(

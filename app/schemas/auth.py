@@ -1,12 +1,16 @@
 from pydantic import BaseModel
 
 
-class User(BaseModel):
+class DashboardUser(BaseModel):
     username: str | None = None
     role: str | None = None
 
 
-class UserInDB(User):
+class DashboardUserCreate(DashboardUser):
+    password: str | None = None
+
+
+class DashboardUserInDB(DashboardUser):
     hashed_password: str | None = None
 
 

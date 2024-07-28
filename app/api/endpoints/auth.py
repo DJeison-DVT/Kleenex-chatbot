@@ -30,14 +30,23 @@ async def login_for_access_token(
     return Token(access_token=access_token, token_type="bearer")
 
 
-@router.get("/users/me/", response_model=User)
+@router.get("/users/me/", response_model=DashboardUser)
 async def read_users_me(
-    current_user: Annotated[User, Depends(get_current_user)],
+    current_user: Annotated[DashboardUser, Depends(get_current_user)],
 ):
     return current_user
 
 
-@router.get("/register")
-def get_data(_: Annotated[bool, Depends(RoleChecker(allowed_roles=["admin"]))]):
-    # TODO
-    return {"data": "TODO"}
+@router.post("/register")
+async def create_new_dashboard_user(
+        user: DashboardUserCreate,
+        _: Annotated[bool, Depends(RoleChecker(allowed_roles=["admin"]))]
+):
+    existing_user = await get_user(user.username)
+    if existing_user:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Username already registered",
+        )
+
+    return await create_user(user)
