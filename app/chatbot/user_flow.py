@@ -3,11 +3,13 @@ from datetime import datetime
 
 from app.schemas.user import User, UserCreation
 from app.schemas.participation import Participation, Status
+from app.schemas.prize import Code
 from app.chatbot.messages import Message, send_message
 from app.chatbot.steps import Steps
 from app.core.services.users import create_user, fetch_user_by_phone, can_participate
 from app.core.services.participations import ParticipationCreation, create_participation, fetch_participations, update_participation
 from app.core.services.priority_number import count_participations
+from app.core.services.codes import get_code_by_participation
 from app.chatbot.transitions import Transition, WhatsAppTransition, DashboardTransition, ServerTransition
 from app.chatbot.flow import FLOW
 
@@ -93,16 +95,13 @@ class FlowManager:
                     elif obj == Participation:
                         args[str(
                             count)] = f"{self.participation.__getattribute__(param)}"
+                    elif obj == Code:
+                        code = await get_code_by_participation(self.participation)
+                        args[str(count)] = f"{code.__getattribute__(param)}"
                     elif obj == "other":
                         if param == "current_participations":
                             ticket_count = await count_participations()
                             args[str(count)] = str(ticket_count)
-                        elif param == "participation_address":
-                            # TODO: wait for an address to be designated
-                            args[str(count)] = "https://demente.com.mx/participation"
-                        elif param == "prize_code":
-                            # TODO: wait for a prize code to be assigned
-                            args[str(count)] = "1234"
                     else:
                         args[str(count)] = f"{param}"
                     count += 1

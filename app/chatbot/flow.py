@@ -1,6 +1,7 @@
 from app.chatbot.steps import Steps
 from app.schemas.user import User
 from app.schemas.participation import Participation, Status
+from app.schemas.prize import Code
 from app.chatbot.transitions import *
 from app.core.services.priority_number import set_priority_number
 
@@ -95,7 +96,8 @@ FLOW = {
         transitions=None,
         message_template='HXaccd22243567d67d646ef272416481f9',
         status=Status.APPROVED.value,
-        format_args=ClassMapping([(Participation, 'prize'), (Participation, 'priority_number'), (None, 'participation_address'), (None, 'prize_code')])
+        format_args=ClassMapping([(Participation, 'prize'), (Participation, 'priority_number'), (
+            Code, 'link'), (Code, 'code')])
     ),
     Steps.DASHBOARD_REJECTION: ServerTransition(
         transitions=None,
