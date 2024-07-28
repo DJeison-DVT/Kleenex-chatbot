@@ -13,7 +13,7 @@ router = APIRouter()
 async def login_for_access_token(
     form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
 ) -> Token:
-    user = authenticate_user(
+    user = await authenticate_user(
         form_data.username, form_data.password
     )
     if not user:
@@ -37,8 +37,7 @@ async def read_users_me(
     return current_user
 
 
-@router.get("/users/me/items/")
-async def read_own_items(
-    current_user: Annotated[User, Depends(get_current_user)],
-):
-    return [{"item_id": "Foo", "owner": current_user.username}]
+@router.get("/register")
+def get_data(_: Annotated[bool, Depends(RoleChecker(allowed_roles=["admin"]))]):
+    # TODO
+    return {"data": "TODO"}
