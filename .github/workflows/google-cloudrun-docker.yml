@@ -1,87 +1,83 @@
 name: Build and Deploy to Cloud Run
 
 on:
-  push:
-    branches: ["main"]
+    push:
+        branches: ["main"]
 
 env:
-  PROJECT_ID: kleenex-promo
-  GAR_NAME: kleenex-contingo
-  GAR_LOCATION: us-central1
-  SERVICE: kleenex-chatbot
-  REGION: us-central1
+    PROJECT_ID: kleenex-promo
+    GAR_NAME: kleenex-contingo
+    GAR_LOCATION: us-central1
+    SERVICE: kleenex-chatbot
+    REGION: us-central1
 
 jobs:
-  deploy:
-    # Add 'id-token' with the intended permissions for workload identity federation
-    permissions:
-      contents: "read"
-      id-token: "write"
+    deploy:
+        # Add 'id-token' with the intended permissions for workload identity federation
+        permissions:
+            contents: "read"
+            id-token: "write"
 
-    runs-on: ubuntu-latest
-    steps:
-      - name: Check Secrets Injection
-        run: |-
-          echo "GCP_CREDENTIALS: ${{ secrets.GCP_CREDENTIALS }}"
+        runs-on: ubuntu-latest
+        steps:
+            - name: Check Secrets Injection
+              run: |-
+                  echo "GCP_CREDENTIALS: ${{ secrets.GCP_CREDENTIALS }}"
 
-      - name: Checkout
-        uses: actions/checkout@v4
+            - name: Checkout
+              uses: actions/checkout@v4
 
-      # NOTE: Alternative option - authentication via credentials json
-      - name: Google Auth
-        id: auth
-        uses: "google-github-actions/auth@v2"
-        with:
-          credentials_json: "${{ secrets.GCP_CREDENTIALS }}" # Replace with the name of your GitHub Actions secret
+            # NOTE: Alternative option - authentication via credentials json
+            - name: Google Auth
+              id: auth
+              uses: "google-github-actions/auth@v2"
+              with:
+                  credentials_json: "${{ secrets.GCP_CREDENTIALS }}" # Replace with the name of your GitHub Actions secret
 
-      - name: Inject GCP Bucket Credentials
-        run: echo "${{ secrets.GCP_BUCKET_CREDENTIALS }}" | base64 --decode > gcp_bucket_credentials.json
+            - name: Write GCP Bucket Credentials
+              run: echo "${{ secrets.GCP_BUCKET_CREDENTIALS }}" | base64 --decode > gcp_bucket_credentials.json
 
-      - name: Print All Secrets
-        run: |-
-          echo "GCP_CREDENTIALS: ${{ secrets.GCP_CREDENTIALS }}"
-          echo "GCP_BUCKET_CREDENTIALS: ${{ secrets.GCP_BUCKET_CREDENTIALS }}"
-          echo "MONGO_URI: ${{ secrets.MONGO_URI }}"
-          echo "TWILIO_ACCOUNT_SID: ${{ secrets.TWILIO_ACCOUNT_SID }}"
-          echo "TWILIO_AUTH_TOKEN: ${{ secrets.TWILIO_AUTH_TOKEN }}"
-          echo "TWILIO_MESSAGING_SERVICE_SID: ${{ secrets.TWILIO_MESSAGING_SERVICE_SID }}"
-          echo "BASE_URL: ${{ secrets.BASE_URL }}"
-          echo "TICKET_BUCKET_NAME: ${{ secrets.TICKET_BUCKET_NAME }}"
-
-      - name: Show App Structure
-        run: ls -la
-
-      # Authenticate Docker to Google Cloud Artifact Registry
-      - name: Docker Auth
-        id: docker-auth
-        run: |-
-          gcloud auth configure-docker "${{ env.GAR_LOCATION }}-docker.pkg.dev"
-
-      - name: Build and Push Container
-        run: |-
-          docker build -t "${{ env.GAR_LOCATION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.GAR_NAME }}/${{ env.SERVICE }}:${{ github.sha }}" ./
-          docker push "${{ env.GAR_LOCATION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.GAR_NAME }}/${{ env.SERVICE }}:${{ github.sha }}"
-
-      # END - Docker auth and build
-
-      - name: Deploy to Cloud Run
-        id: deploy
-        uses: google-github-actions/deploy-cloudrun@v2
-        with:
-          service: ${{ env.SERVICE }}
-          region: ${{ env.REGION }}
-          # NOTE: If using a pre-built image, update the image name here
-          image: ${{ env.GAR_LOCATION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.GAR_NAME }}/${{ env.SERVICE }}:${{ github.sha }}
-          env_vars: |
-            MONGO_URI=${{ secrets.MONGO_URI }}
-            TWILIO_ACCOUNT_SID=${{ secrets.TWILIO_ACCOUNT_SID }}
-            TWILIO_AUTH_TOKEN=${{ secrets.TWILIO_AUTH_TOKEN }}
-            TWILIO_MESSAGING_SERVICE_SID=${{ secrets.TWILIO_MESSAGING_SERVICE_SID }}
-            BASE_URL=${{ secrets.BASE_URL }}
-            MONGO_DATABASE=${{ vars.MONGO_DATABASE }}
-            TICKET_BUCKET_NAME=${{ secrets.TICKET_BUCKET_NAME }}
-      # If required, use the Cloud Run url output in later steps
+            - name: Print GCP Bucket Credentials
+              run: |
+                  echo "Contents of gcp_bucket_credentials.json:"
+                  cat gcp_bucket_credentials.json
 
 
-      - name: Show Output
-        run: echo ${{ steps.deploy.outputs.url }}
+            - name: Show App Structure
+              run: ls -la
+
+            # Authenticate Docker to Google Cloud Artifact Registry
+            - name: Docker Auth
+              id: docker-auth
+              run: |-
+                  gcloud auth configure-docker "${{ env.GAR_LOCATION }}-docker.pkg.dev"
+
+            - name: Build and Push Container
+              run: |-
+                  docker build -t "${{ env.GAR_LOCATION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.GAR_NAME }}/${{ env.SERVICE }}:${{ github.sha }}" ./
+                  docker push "${{ env.GAR_LOCATION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.GAR_NAME }}/${{ env.SERVICE }}:${{ github.sha }}"
+
+            # END - Docker auth and build
+
+            - name: Deploy to Cloud Run
+              id: deploy
+              uses: google-github-actions/deploy-cloudrun@v2
+              with:
+                  service: ${{ env.SERVICE }}
+                  region: ${{ env.REGION }}
+                  # NOTE: If using a pre-built image, update the image name here
+                  image: ${{ env.GAR_LOCATION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.GAR_NAME }}/${{ env.SERVICE }}:${{ github.sha }}
+                  env_vars: |
+                      MONGO_URI=${{ secrets.MONGO_URI }}
+                      TWILIO_ACCOUNT_SID=${{ secrets.TWILIO_ACCOUNT_SID }}
+                      TWILIO_AUTH_TOKEN=${{ secrets.TWILIO_AUTH_TOKEN }}
+                      TWILIO_MESSAGING_SERVICE_SID=${{ secrets.TWILIO_MESSAGING_SERVICE_SID }}
+                      BASE_URL=${{ secrets.BASE_URL }}
+                      MONGO_DATABASE=${{ vars.MONGO_DATABASE }}
+                      TICKET_BUCKET_NAME=${{ secrets.TICKET_BUCKET_NAME }}
+                      SECRET_KEY=${{ secrets.SECRET_KEY }}
+
+            # If required, use the Cloud Run url output in later steps
+
+            - name: Show Output
+              run: echo ${{ steps.deploy.outputs.url }}
