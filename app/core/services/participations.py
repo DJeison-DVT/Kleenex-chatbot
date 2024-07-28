@@ -4,9 +4,10 @@ from motor.motor_asyncio import AsyncIOMotorClient
 from pymongo import ASCENDING
 from bson import ObjectId
 from pymongo.errors import InvalidDocument
+from fastapi import HTTPException
 
 from app.schemas.participation import Participation, Status, ParticipationCreation
-from app.db.db import ParticipationsCollection
+from app.db.db import ParticipationsCollection, PrizeCodesCollection, _MongoClientSingleton
 from app.chatbot.steps import Steps
 from app.core.services.users import fetch_user_by_phone, update_user_by_phone
 
@@ -29,7 +30,6 @@ async def fetch_participations(
 
     if status:
         query["status"] = status
-
 
     cursor = ParticipationsCollection().find(query)
 
@@ -125,16 +125,38 @@ async def accept_participation(participation: Participation, serial_number: str)
     if existing:
         raise ValueError("Duplicate Serial Number")
 
-    try:
-        participation.serial_number = serial_number
-        await ParticipationsCollection().update_one(
-            {"_id": id},
-            {"$set": {
-                "serial_number": serial_number,
-            }}
-        )
-    except Exception as e:
-        raise e
+    available_code = await PrizeCodesCollection().find_one({
+        "taken": False,
+        "amount": int(participation.prize)
+    })
+
+    if not available_code:
+        raise HTTPException(status_code=404, detail="No available code found")
+
+    print(available_code)
+
+    async with await _MongoClientSingleton().mongo_client.start_session() as session:
+        async with session.start_transaction():
+            try:
+                participation.serial_number = serial_number
+                await ParticipationsCollection().update_one(
+                    {"_id": id},
+                    {"$set": {
+                        "serial_number": serial_number,
+                    }}
+                )
+
+                await PrizeCodesCollection().update_one(
+                    {"_id": available_code['_id']},
+                    {"$set": {
+                        "participationId": id,
+                    }}
+                )
+            except Exception as e:
+                print(e)
+                await session.abort_transaction()
+                raise e
+
     return 'accepted'
 
 
