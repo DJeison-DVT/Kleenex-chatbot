@@ -9,3 +9,5 @@ pydantic_settings
 pytest_asyncio
 twilio
 google-cloud-storage
+pyjwt
+passlib[bcrypt]
