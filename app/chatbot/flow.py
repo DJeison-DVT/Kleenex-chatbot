@@ -87,7 +87,7 @@ FLOW = {
             'accepted': Steps.DASHBOARD_CONFIRMATION,
             'rejected': Steps.DASHBOARD_REJECTION,
         },
-        message_template='HXf5e5575d9a622b9f6c396797433f4688',
+        message_template='HXb42ae857f55af7f4170c48fda1dd3502',
         format_args=ClassMapping(
             [(Participation, 'prize'), (Participation, 'priority_number')]),
         status=Status.COMPLETE.value
