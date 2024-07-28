@@ -41,5 +41,9 @@ def PrizeCodesCollection() -> AgnosticDatabase:
     return MongoDatabase().prize_codes
 
 
+def DashboardUsers() -> AgnosticDatabase:
+    return MongoDatabase().dashboard_users
+
+
 async def ping():
     await MongoDatabase().command("ping")
