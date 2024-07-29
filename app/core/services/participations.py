@@ -150,6 +150,7 @@ async def accept_participation(participation: Participation, serial_number: str)
                     {"_id": available_code['_id']},
                     {"$set": {
                         "participationId": id,
+                        "taken": True,
                     }}
                 )
             except Exception as e:
