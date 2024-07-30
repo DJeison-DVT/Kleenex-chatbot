@@ -1,7 +1,10 @@
-from fastapi import APIRouter, HTTPException, Response
+from fastapi import APIRouter, HTTPException, Response, Depends
 from pydantic import BaseModel
+from typing import Annotated
 
+from app.core.auth import RoleChecker
 from app.core.services.participations import accept_participation, fetch_participation_by_id, update_participation
+from app.core.services.dashboard_users import fetch_dashboard_users
 from app.schemas.participation import Status
 from app.chatbot.flow import FLOW
 from app.chatbot.user_flow import FlowManager
@@ -67,3 +70,10 @@ async def reject(request: AcceptRequest, response: Response):
     except Exception as e:
         response.status_code = 500
         return HTTPException(status_code=500, detail=f"Internal server error : {e}")
+
+
+@router.get("/users")
+async def get_dashboard_users(
+        _: Annotated[bool, Depends(RoleChecker(allowed_roles=["admin"]))]
+):
+    return await fetch_dashboard_users()

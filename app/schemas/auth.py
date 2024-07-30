@@ -1,9 +1,13 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
 class DashboardUser(BaseModel):
     username: str | None = None
     role: str | None = None
+
+
+class DisplayDashboardUser(DashboardUser):
+    id: str = Field(..., alias="_id")
 
 
 class DashboardUserCreate(DashboardUser):
