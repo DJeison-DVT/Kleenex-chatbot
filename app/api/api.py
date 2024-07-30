@@ -6,19 +6,26 @@ from app.api.endpoints import (
     participations,
     dashboard,
     auth,
+    codes
 )
 
 router = APIRouter()
 
 
 router.include_router(
-    users.router, prefix=settings.USER_SECTION, tags=["users"])
-router.include_router(participations.router,
-                      prefix=settings.PARTICIPATION_SECTION, tags=["participations"])
+    users.router, prefix=settings.USER_SECTION, tags=["users"]
+)
+router.include_router(
+    participations.router, prefix=settings.PARTICIPATION_SECTION, tags=[
+        "participations"]
+)
 router.include_router(
     dashboard.router, prefix=settings.DASHBOARD_SECTION, tags=["dashboard"])
 router.include_router(
     auth.router, prefix=settings.AUTH_SECTION, tags=['auth']
+)
+router.include_router(
+    codes.router, prefix=settings.CODES_SECTION, tags=['codes']
 )
 
 api_router = router
