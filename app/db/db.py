@@ -45,5 +45,9 @@ def DashboardUsers() -> AgnosticDatabase:
     return MongoDatabase().dashboard_users
 
 
+def CodeCountersCollection() -> AgnosticDatabase:
+    return MongoDatabase().prize_counters
+
+
 async def ping():
     await MongoDatabase().command("ping")

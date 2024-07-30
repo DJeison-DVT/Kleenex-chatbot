@@ -7,7 +7,7 @@ from pymongo.errors import InvalidDocument
 from fastapi import HTTPException
 
 from app.schemas.participation import Participation, Status, ParticipationCreation
-from app.db.db import ParticipationsCollection, PrizeCodesCollection, _MongoClientSingleton
+from app.db.db import ParticipationsCollection, PrizeCodesCollection, _MongoClientSingleton, CodeCountersCollection
 from app.chatbot.steps import Steps
 from app.core.services.users import fetch_user_by_phone, update_user_by_phone
 
@@ -151,6 +151,14 @@ async def accept_participation(participation: Participation, serial_number: str)
                     {"$set": {
                         "participationId": id,
                         "taken": True,
+                    }}
+                )
+
+                await CodeCountersCollection().update_one(
+                    {"_id": int(available_code['amount'])},
+                    {"$inc": {
+                        "taken": 1,
+                        "available": -1
                     }}
                 )
             except Exception as e:
