@@ -80,7 +80,6 @@ class FlowManager:
         await update_participation(self.participation.id, self.participation)
 
     async def handle_message(self, transition: Transition):
-        print("Current transition", transition)
         body = transition.get_template()
         format_args = transition.format_args
         if format_args:
@@ -131,38 +130,27 @@ class FlowManager:
             if message:
                 next_step = transition.execute(
                     participation=self.participation, message=message)
-                print("Uploading:", transition.upload_params,
-                      message.body_content)
                 if transition.upload_params:
                     await self.handle_upload_params(transition=transition, message=message)
         elif isinstance(transition, DashboardTransition):
-            print("dashboard_transition")
-            print(response)
             if response and isinstance(response, str):
-                print("Handling response", response)
                 next_step = await transition.execute(
                     participation=self.participation, response=response)
                 if transition.upload_params:
-                    print("uploading params")
                     await self.handle_upload_params(transition=transition, response=response)
 
         transition = self.flow.get(Steps(next_step), transition)
 
         if isinstance(transition, ServerTransition):
-            print("Handling server transition")
-            # sleep for 3 sec
             old_step = next_step
             next_step = await transition.execute(participation=self.participation)
-            print("Next step", next_step or transition)
             await self.update_user_flow(next_step or old_step)
             await self.handle_message(transition)
             if next_step:
                 await self.execute(response=next_step)
         elif isinstance(transition, DashboardTransition):
-            print("Handling dashboard transition")
             await self.handle_message(transition)
             await self.update_user_flow(next_step)
         else:
-            print("Handling normal transition")
             await self.handle_message(transition)
             await self.update_user_flow(next_step)

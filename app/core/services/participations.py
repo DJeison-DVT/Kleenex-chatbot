@@ -133,8 +133,6 @@ async def accept_participation(participation: Participation, serial_number: str)
     if not available_code:
         raise HTTPException(status_code=404, detail="No available code found")
 
-    print(available_code)
-
     async with await _MongoClientSingleton().mongo_client.start_session() as session:
         async with session.start_transaction():
             try:

@@ -52,15 +52,11 @@ class Message:
                         folder_path, f"media_{self.sms_message_sid}_{self.media_urls.index(url)}.jpeg")
                     with open(file_path, "wb") as f:
                         f.write(response.content)
-                    print(f"Downloaded {file_path}")
                 else:
                     print(f"Failed to download media from {url}")
 
 
 def send_message(body: str, user: User, format_args: dict = {}):
-    print(
-        f"Sending message from messaging service: {settings.TWILIO_MESSAGING_SERVICE_SID}\nto {user.phone}\nwith content_sid: {body}")
-    print(f"Format args: {format_args}")
     try:
         client.messages.create(
             messaging_service_sid=settings.TWILIO_MESSAGING_SERVICE_SID,

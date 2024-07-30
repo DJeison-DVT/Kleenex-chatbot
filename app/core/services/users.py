@@ -80,10 +80,6 @@ async def delete_user_by_phone(phone: str):
 def can_participate(user: User) -> bool:
     today = datetime.now().strftime("%Y-%m-%d")
     submissions = user.submissions.get(today, 0)
-    print(f"Submissions: {submissions}")
-    print(f"Settings: {settings.DAILY_PARTICIPAITONS}")
-
-    print(f"{submissions >= settings.DAILY_PARTICIPAITONS} {submissions} >= {settings.DAILY_PARTICIPAITONS}")
     if submissions >= settings.DAILY_PARTICIPAITONS:
         return False
     return True

@@ -46,13 +46,9 @@ class Transition(ABC):
 
     async def save_upload_params(self, user: User, participation: Participation, content: str):
         user_phone = user.phone
-        print("uploading...")
-
         for obj, params in self.upload_params.map.items():
             if obj == User and content:
                 for param in params:
-                    print(
-                        f"Saving {obj} with {param} as {content}")
                     setattr(user, param, content)
                     user = await update_user_by_phone(user_phone, user)
                     return user
@@ -109,7 +105,6 @@ class MultimediaUploadTransition(WhatsAppTransition):
     def execute(self, participation: Participation, message: Message):
         if message.num_media > 0:
             try:
-                print(message.media_urls)
                 media_url = message.media_urls[0]
                 r = requests.get(media_url)
                 content_type = r.headers['Content-Type']

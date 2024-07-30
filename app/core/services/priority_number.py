@@ -7,7 +7,6 @@ from app.schemas.participation import Participation, Status
 
 
 async def count_participations(date: datetime = datetime.now()) -> int:
-    print(date)
     date = date.strftime("%Y-%m-%d")
     count = await CountersCollection().find_one({"_id": date})
     return count["value"] if count else 0
