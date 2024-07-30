@@ -4,7 +4,7 @@ from typing import Annotated
 
 from app.core.auth import RoleChecker
 from app.core.services.participations import accept_participation, fetch_participation_by_id, update_participation
-from app.core.services.dashboard_users import fetch_dashboard_users
+from app.core.services.dashboard_users import fetch_dashboard_users, delete_dashboard_user_by_id
 from app.schemas.participation import Status
 from app.chatbot.flow import FLOW
 from app.chatbot.user_flow import FlowManager
@@ -77,3 +77,31 @@ async def get_dashboard_users(
         _: Annotated[bool, Depends(RoleChecker(allowed_roles=["admin"]))]
 ):
     return await fetch_dashboard_users()
+
+
+class DeleteUserRequest(BaseModel):
+    user_id: str
+
+
+@router.delete("/users")
+async def delete_dashboard_user(
+    request: DeleteUserRequest, response: Response,
+    _: Annotated[bool, Depends(RoleChecker(allowed_roles=["admin"]))]
+):
+    response.headers["Access-Control-Allow-Origin"] = "*"
+    response.headers["Access-Control-Allow-Methods"] = "DELETE"
+    response.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization"
+
+    try:
+        user_id = request.user_id
+        await delete_dashboard_user_by_id(user_id)
+    except ValueError as e:
+        if "not found" in str(e):
+            raise HTTPException(status_code=404, detail=str(e))
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        print(e)
+        raise HTTPException(status_code=500, detail=f"Unexpected error: {e}")
+
+    response.status_code = 204
+    return {"message": "User deleted successfully"}
