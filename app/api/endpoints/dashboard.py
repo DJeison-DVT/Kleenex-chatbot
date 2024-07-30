@@ -35,7 +35,11 @@ async def handle_accept(ticket_id, serial_number=None, rejection_reason=None):
 
 
 @router.post("/accept")
-async def accept(request: AcceptRequest, response: Response):
+async def accept(
+    request: AcceptRequest,
+    response: Response,
+    _: Annotated[bool, Depends(RoleChecker(allowed_roles=["user", "admin"]))]
+):
     response.headers["Access-Control-Allow-Origin"] = "*"
     response.headers["Access-Control-Allow-Methods"] = "POST, OPTIONS"
     response.headers["Access-Control-Allow-Headers"] = "Content-Type"
@@ -58,7 +62,11 @@ async def accept(request: AcceptRequest, response: Response):
 
 
 @router.post("/reject")
-async def reject(request: AcceptRequest, response: Response):
+async def reject(
+    request: AcceptRequest,
+    response: Response,
+    _: Annotated[bool, Depends(RoleChecker(allowed_roles=["user", "admin"]))]
+):
     response.headers["Access-Control-Allow-Origin"] = "*"
     response.headers["Access-Control-Allow-Methods"] = "POST, OPTIONS"
     response.headers["Access-Control-Allow-Headers"] = "Content-Type"
