@@ -1,7 +1,5 @@
 from datetime import datetime, timedelta, timezone
 from typing import List, Optional
-from motor.motor_asyncio import AsyncIOMotorClient
-from pymongo import ASCENDING
 from bson import ObjectId
 from pymongo.errors import InvalidDocument
 from fastapi import HTTPException
@@ -10,6 +8,7 @@ from app.schemas.participation import Participation, Status, ParticipationCreati
 from app.db.db import ParticipationsCollection, PrizeCodesCollection, _MongoClientSingleton, CodeCountersCollection
 from app.chatbot.steps import Steps
 from app.core.services.users import fetch_user_by_phone, update_user_by_phone
+from app.core.config import settings
 
 
 async def fetch_participations(
@@ -203,3 +202,37 @@ async def add_participation(participation: Participation):
 
     user.submissions[today] = user.submissions.get(today, 0) + 1
     await update_user_by_phone(phone, user)
+
+
+async def upload_attempt(participation: Participation):
+    async with await _MongoClientSingleton().mongo_client.start_session() as session:
+        async with session.start_transaction():
+            try:
+                if not ObjectId.is_valid(participation.id):
+                    raise ValueError("Invalid ID")
+                object_id = ObjectId(participation.id)
+
+                print(object_id)
+                result = await ParticipationsCollection().find_one_and_update(
+                    {"_id": object_id},
+                    {"$inc": {"ticket_attempts": 1}},
+                    session=session,
+                    return_document=True
+                )
+
+                ticket_attempts = result["ticket_attempts"]
+                participation.ticket_attempts = ticket_attempts
+
+                if ticket_attempts >= settings.INVALID_PHOTO_MAX_OPPORTUNITIES:
+                    participation.status = Status.REJECTED.value
+                    await ParticipationsCollection().update_one(
+                        {"_id": object_id},
+                        {'$set': {'status': Status.REJECTED.value}},
+                        session=session
+                    )
+
+            except Exception as e:
+                print(e)
+                await session.abort_transaction()
+                raise e
+    return

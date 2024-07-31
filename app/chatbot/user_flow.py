@@ -7,10 +7,10 @@ from app.schemas.prize import Code
 from app.chatbot.messages import Message, send_message
 from app.chatbot.steps import Steps
 from app.core.services.users import create_user, fetch_user_by_phone, can_participate
-from app.core.services.participations import ParticipationCreation, create_participation, fetch_participations, update_participation
+from app.core.services.participations import ParticipationCreation, create_participation, fetch_participations, update_participation, upload_attempt
 from app.core.services.priority_number import count_participations
 from app.core.services.codes import get_code_by_participation
-from app.chatbot.transitions import Transition, WhatsAppTransition, DashboardTransition, ServerTransition
+from app.chatbot.transitions import Transition, WhatsAppTransition, DashboardTransition, ServerTransition, MultimediaUploadTransition
 from app.chatbot.flow import FLOW
 
 
@@ -130,6 +130,9 @@ class FlowManager:
             if message:
                 next_step = transition.execute(
                     participation=self.participation, message=message)
+                if isinstance(transition, MultimediaUploadTransition):
+                    print("updload media")
+                    await upload_attempt(self.participation)
                 if transition.upload_params:
                     await self.handle_upload_params(transition=transition, message=message)
         elif isinstance(transition, DashboardTransition):
