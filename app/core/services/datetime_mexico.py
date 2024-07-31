@@ -6,9 +6,7 @@ from app.core.config import settings
 
 def get_current_datetime():
     utc_time = datetime.now(ZoneInfo("UTC"))
-    print(utc_time)
     mx_time = utc_time.astimezone(settings.LOCAL_TIMEZONE)
-    print('mx', mx_time)
     return mx_time
 
 

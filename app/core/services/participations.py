@@ -43,7 +43,6 @@ async def fetch_participations(
     participations = []
     async for participation in cursor:
         participation["_id"] = str(participation["_id"])
-        participation["datetime"] = UTC_to_local(participation.get("datetime"))
         try:
             participation = Participation(**participation)
         except Exception as e:
@@ -60,8 +59,6 @@ async def fetch_participation_by_id(id: str) -> Participation:
     if not existing_participation:
         raise ValueError("Participation not found")
     existing_participation["_id"] = str(existing_participation["_id"])
-    existing_participation["datetime"] = UTC_to_local(
-        existing_participation.get("datetime"))
     return Participation(**existing_participation)
 
 
@@ -70,8 +67,6 @@ async def fetch_participation_by_phone(phone: str) -> Participation:
     if not existing_participation:
         raise ValueError("Participation not found")
     existing_participation["_id"] = str(existing_participation["_id"])
-    existing_participation["datetime"] = UTC_to_local(
-        existing_participation.get("datetime"))
     return Participation(**existing_participation)
 
 
@@ -118,8 +113,6 @@ async def create_participation(
 
     new_participation = await ParticipationsCollection().find_one({"_id": result.inserted_id})
     new_participation["_id"] = str(new_participation["_id"])
-    new_participation["datetime"] = UTC_to_local(
-        new_participation.get("datetime"))
 
     return Participation(**new_participation)
 
@@ -192,9 +185,6 @@ async def update_participation(id: str, participation: Participation):
     if not updated_participation:
         raise ValueError("Participation not found after update")
     updated_participation["_id"] = str(updated_participation["_id"])
-    updated_participation["datetime"] = UTC_to_local(
-        updated_participation.get("datetime"))
-
     return Participation(**updated_participation)
 
 

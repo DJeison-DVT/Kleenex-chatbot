@@ -19,7 +19,6 @@ async def save_message(message_sid: str, user: User, from_user: bool = False):
                     "datetime": get_current_datetime(),
                 }
 
-                print('anotated', document['datetime'])
                 await MessagesCollection().insert_one(document, session=session)
 
             except Exception as e:
