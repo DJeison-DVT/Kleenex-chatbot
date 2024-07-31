@@ -8,12 +8,14 @@ from app.schemas.participation import Participation, Status
 
 async def count_participations(date: datetime = datetime.now()) -> int:
     date = date.strftime("%Y-%m-%d")
+    print(date)
     count = await CountersCollection().find_one({"_id": date})
     return count["value"] if count else 0
 
 
 async def get_prize(priority_number: int, date: datetime, session) -> Dict:
     date = date.strftime("%Y-%m-%d")
+    print(date)
     prize = await PrizesCollection().find_one_and_update(
         {"priority_number": priority_number, "date": date, "taken": False},
         {"$set": {"taken": True}},
