@@ -6,7 +6,8 @@ from app.api.endpoints import (
     participations,
     dashboard,
     auth,
-    codes
+    codes,
+    messages,
 )
 
 router = APIRouter()
@@ -27,5 +28,9 @@ router.include_router(
 router.include_router(
     codes.router, prefix=settings.CODES_SECTION, tags=['codes']
 )
+router.include_router(
+    messages.router, prefix=settings.MESSAGES_SECTION, tags=['messages']
+)
+
 
 api_router = router

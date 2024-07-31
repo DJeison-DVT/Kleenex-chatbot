@@ -26,6 +26,7 @@ class Settings(BaseSettings):
     DASHBOARD_SECTION: str = "/dashboard"
     AUTH_SECTION: str = "/auth"
     CODES_SECTION: str = '/codes'
+    MESSAGES_SECTION: str = '/messages'
     BACKEND_CORS_ORIGINS: Annotated[
         list[AnyHttpUrl] | str, BeforeValidator(parse_cors)
     ] = []

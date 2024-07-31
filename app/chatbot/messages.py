@@ -1,12 +1,16 @@
-import os
 import urllib.parse
 import json
-import requests
 from twilio.rest import Client
+from bson import ObjectId
+from pydantic import BaseModel, HttpUrl, Field
+from typing import Optional, Tuple, List
+from datetime import datetime
+
 
 from app.schemas.user import User
 from app.core.config import settings
 from app.core.services.messages import save_message
+from app.db.db import MessagesCollection
 
 client = Client(settings.TWILIO_ACCOUNT_SID, settings.TWILIO_AUTH_TOKEN)
 
@@ -53,10 +57,49 @@ async def send_message(body: str, user: User, format_args: dict = {}):
         raise RuntimeError("Failed to send message")
 
 
-async def retrieve_body(message_sid: str):
+async def retrieve_body(message_sid: str) -> Tuple[str, str]:
     try:
         message = client.messages(message_sid).fetch()
+        body = message.body or None
+        url = None
+        if int(message.num_media) > 0:
+            uris = [media.uri for media in message.media.list()]
+            uri = uris[0]
+            base_url = "https://api.twilio.com"
+            url = f"{base_url}{uri.replace('.json', '')}"
+
+        return body, url
+
     except Exception as e:
         print(f"Error: {e}")
         raise RuntimeError("Failed to retrieve message")
-    return message
+
+
+async def get_user_messages(user_id: str):
+    if not ObjectId.is_valid(user_id):
+        raise ValueError("Invalid ID")
+
+    cursor = MessagesCollection().find({"client_id": ObjectId(user_id)})
+    messages = []
+    async for message in cursor:
+        print(message)
+
+        message["_id"] = str(message["_id"])
+        message["client_id"] = str(message["client_id"])
+
+        text, photo_url = await retrieve_body(message["message_sid"])
+
+        if not photo_url:
+            photo_url = None
+
+        # Append the message to the list
+        messages.append({
+            "message_sid": message["message_sid"],
+            "from_": message["from"],
+            "to": message["to"],
+            "datetime": message["datetime"],
+            "text": text,
+            "photo_url": photo_url
+        })
+
+    return messages
