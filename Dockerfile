@@ -25,6 +25,15 @@ ENV GCP_BUCKET_CREDENTIALS=${GCP_BUCKET_CREDENTIALS}
 ENV TICKET_BUCKET_NAME=${TICKET_BUCKET_NAME}
 ENV SECRET_KEY=${SECRET_KEY}
 
+# Install dependencies including tzdata
+RUN apt-get update && apt-get install -y \
+    tzdata \
+    && rm -rf /var/lib/apt/lists/*
+
+# Set the timezone environment variable
+ENV TZ=America/Mexico_City
+RUN ln -fs /usr/share/zoneinfo/$TZ /etc/localtime && dpkg-reconfigure --frontend noninteractive tzdata
+
 COPY requirements.txt .
 
 # Install the dependencies
@@ -40,5 +49,3 @@ COPY ../gcp_bucket_credentials.json /app/
 EXPOSE 8080
 
 CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8080"]
-
-
