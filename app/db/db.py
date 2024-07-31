@@ -26,6 +26,7 @@ def UsersCollection() -> AgnosticDatabase:
 
 
 def ParticipationsCollection() -> AgnosticDatabase:
+    # datetime is stored in UTC, offset -6 for mexico
     return MongoDatabase().participations
 
 
@@ -47,6 +48,11 @@ def DashboardUsersCollection() -> AgnosticDatabase:
 
 def CodeCountersCollection() -> AgnosticDatabase:
     return MongoDatabase().prize_counters
+
+
+def MessagesCollection() -> AgnosticDatabase:
+    # timestamp is stored in UTC, offset -6 for mexico
+    return MongoDatabase().messages
 
 
 async def ping():

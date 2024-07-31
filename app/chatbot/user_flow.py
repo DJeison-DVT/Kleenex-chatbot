@@ -10,6 +10,7 @@ from app.core.services.users import create_user, fetch_user_by_phone, can_partic
 from app.core.services.participations import ParticipationCreation, create_participation, fetch_participations, update_participation, upload_attempt
 from app.core.services.priority_number import count_participations
 from app.core.services.codes import get_code_by_participation
+from app.core.services.messages import save_message
 from app.chatbot.transitions import Transition, WhatsAppTransition, DashboardTransition, ServerTransition, MultimediaUploadTransition
 from app.chatbot.flow import FLOW
 
@@ -39,15 +40,15 @@ async def handle_new_user(message: Message):
     user = await create_user(user_creation)
     count = await count_participations()
 
-    send_message(
+    await send_message(
         FLOW[Steps.ONBOARDING].message_template,
         user,
         {"1": str(count)}
     )
 
 
-def handle_max_participations(user: User):
-    send_message(
+async def handle_max_participations(user: User):
+    await send_message(
         FLOW[Steps.MAX_PARTICIPATIONS].message_template,
         user
     )
@@ -56,8 +57,11 @@ def handle_max_participations(user: User):
 async def handle_flow(message: Message):
     try:
         user = await fetch_user_by_phone(message.from_number)
+
+        await save_message(message.sms_message_sid, user, from_user=True)
+
         if not can_participate(user):
-            handle_max_participations(user)
+            await handle_max_participations(user)
         else:
             participation = await get_current_participation(user)
             await handle_user(user, participation, message)
@@ -108,7 +112,7 @@ class FlowManager:
             format_args = args
 
         try:
-            send_message(body, self.user, format_args)
+            await send_message(body, self.user, format_args)
         except Exception as e:
             print(f"Failed to send message: {str(e)}")
 

@@ -5,7 +5,7 @@ from datetime import datetime, timezone
 from app.schemas.participation import Status
 from app.core.config import settings
 from tests.api.test_api_users import SECTION as USER_SECTION
-from app.core.services.datetime_mexico import get_current_datetime
+from app.core.services.datetime_mexico import *
 
 SECTION = "/participations/"
 PHONE = "1234567890"

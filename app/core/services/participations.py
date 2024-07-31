@@ -3,13 +3,14 @@ from typing import List, Optional
 from bson import ObjectId
 from pymongo.errors import InvalidDocument
 from fastapi import HTTPException
+from zoneinfo import ZoneInfo
 
 from app.schemas.participation import Participation, Status, ParticipationCreation
 from app.db.db import ParticipationsCollection, PrizeCodesCollection, _MongoClientSingleton, CodeCountersCollection
 from app.chatbot.steps import Steps
 from app.core.services.users import fetch_user_by_phone, update_user_by_phone
 from app.core.config import settings
-from app.core.services.datetime_mexico import get_current_datetime
+from app.core.services.datetime_mexico import *
 
 
 async def fetch_participations(
@@ -21,9 +22,12 @@ async def fetch_participations(
     query = {}
 
     if date:
-        start_of_day = datetime(date.year, date.month, date.day)
+        start_of_day = datetime(date.year, date.month,
+                                date.day, tzinfo=settings.LOCAL_TIMEZONE)
         end_of_day = start_of_day + timedelta(days=1)
-        query["datetime"] = {"$gte": start_of_day, "$lt": end_of_day}
+        start_of_day_utc = start_of_day.astimezone(ZoneInfo("UTC"))
+        end_of_day_utc = end_of_day.astimezone(ZoneInfo("UTC"))
+        query["datetime"] = {"$gte": start_of_day_utc, "$lt": end_of_day_utc}
 
     if phone:
         query["user.phone"] = phone
@@ -39,6 +43,7 @@ async def fetch_participations(
     participations = []
     async for participation in cursor:
         participation["_id"] = str(participation["_id"])
+        participation["datetime"] = UTC_to_local(participation.get("datetime"))
         try:
             participation = Participation(**participation)
         except Exception as e:
@@ -55,6 +60,8 @@ async def fetch_participation_by_id(id: str) -> Participation:
     if not existing_participation:
         raise ValueError("Participation not found")
     existing_participation["_id"] = str(existing_participation["_id"])
+    existing_participation["datetime"] = UTC_to_local(
+        existing_participation.get("datetime"))
     return Participation(**existing_participation)
 
 
@@ -63,21 +70,24 @@ async def fetch_participation_by_phone(phone: str) -> Participation:
     if not existing_participation:
         raise ValueError("Participation not found")
     existing_participation["_id"] = str(existing_participation["_id"])
+    existing_participation["datetime"] = UTC_to_local(
+        existing_participation.get("datetime"))
     return Participation(**existing_participation)
 
 
 async def count_participations(date: datetime = get_current_datetime().date()) -> int:
-    start_of_day = datetime(
-        date.year,
-        date.month,
-        date.day,
-        tzinfo=timezone.utc
-    )
-    end_of_day = start_of_day + timedelta(days=1)
+    start_of_day_local = datetime(
+        date.year, date.month, date.day, tzinfo=settings.LOCAL_TIMEZONE)
+    end_of_day_local = start_of_day_local + timedelta(days=1)
+
+    start_of_day_utc = start_of_day_local.astimezone(ZoneInfo("UTC"))
+    end_of_day_utc = end_of_day_local.astimezone(ZoneInfo("UTC"))
+
     query = {
-        "datetime": {"$gte": start_of_day, "$lt": end_of_day},
+        "datetime": {"$gte": start_of_day_utc, "$lt": end_of_day_utc},
         "status": {"$ne": Status.INCOMPLETE.value}
     }
+
     return await ParticipationsCollection().count_documents(query)
 
 
@@ -107,8 +117,10 @@ async def create_participation(
         raise e
 
     new_participation = await ParticipationsCollection().find_one({"_id": result.inserted_id})
-    # Convert ObjectId to string
     new_participation["_id"] = str(new_participation["_id"])
+    new_participation["datetime"] = UTC_to_local(
+        new_participation.get("datetime"))
+
     return Participation(**new_participation)
 
 
@@ -180,6 +192,9 @@ async def update_participation(id: str, participation: Participation):
     if not updated_participation:
         raise ValueError("Participation not found after update")
     updated_participation["_id"] = str(updated_participation["_id"])
+    updated_participation["datetime"] = UTC_to_local(
+        updated_participation.get("datetime"))
+
     return Participation(**updated_participation)
 
 

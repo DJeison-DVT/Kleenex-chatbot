@@ -9,7 +9,7 @@ from jwt.exceptions import InvalidTokenError
 from app.core.config import settings
 from app.db.db import DashboardUsersCollection
 from app.schemas.auth import *
-from app.core.services.datetime_mexico import get_current_datetime
+from app.core.services.datetime_mexico import *
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/token")

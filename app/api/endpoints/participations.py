@@ -8,7 +8,7 @@ from app.schemas.participation import Participation, ParticipationCreation
 from app.serializers.participation import serialize_participations, serialize_participation
 from app.core.services.participations import *
 from app.core.services.priority_number import count_participations
-from app.core.services.datetime_mexico import get_current_datetime
+from app.core.services.datetime_mexico import *
 
 router = APIRouter()
 

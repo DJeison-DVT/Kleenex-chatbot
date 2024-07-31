@@ -8,7 +8,7 @@ from app.schemas.participation import Participation, Status
 from app.schemas.user import User
 from app.chatbot.steps import Steps
 from app.db.db import _MongoClientSingleton
-from app.core.services.datetime_mexico import get_current_datetime
+from app.core.services.datetime_mexico import *
 
 
 @pytest.mark.asyncio

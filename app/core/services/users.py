@@ -4,7 +4,7 @@ from datetime import datetime
 from app.schemas.user import User, UserCreation
 from app.db.db import UsersCollection, ParticipationsCollection, _MongoClientSingleton
 from app.core.config import settings
-from app.core.services.datetime_mexico import get_current_datetime
+from app.core.services.datetime_mexico import *
 
 
 async def fetch_users() -> List[User]:

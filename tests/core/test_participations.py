@@ -7,7 +7,7 @@ from app.schemas.participation import ParticipationCreation, Participation, Stat
 from app.schemas.user import User
 from app.core.services.participations import *
 from app.core.services.users import update_user_by_phone
-from app.core.services.datetime_mexico import get_current_datetime
+from app.core.services.datetime_mexico import *
 
 
 @pytest.mark.asyncio

@@ -4,7 +4,7 @@ from typing import Dict
 
 from app.db.db import _MongoClientSingleton, ParticipationsCollection, CountersCollection, PrizesCollection
 from app.schemas.participation import Participation, Status
-from app.core.services.datetime_mexico import get_current_datetime
+from app.core.services.datetime_mexico import *
 
 
 async def count_participations(date: datetime = get_current_datetime()) -> int:
