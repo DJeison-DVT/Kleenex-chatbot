@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
 
 from app.core.config import settings
@@ -11,8 +11,5 @@ def get_current_datetime():
 
 
 def UTC_to_local(utc_datetime: datetime) -> datetime:
-    utc_datetime = utc_datetime.astimezone(ZoneInfo("UTC"))
-
-    # Convert to local timezone
-    local_datetime = utc_datetime.astimezone(settings.LOCAL_TIMEZONE)
+    local_datetime = utc_datetime - timedelta(hours=6)
     return local_datetime

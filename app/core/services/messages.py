@@ -1,5 +1,5 @@
 from bson import ObjectId
-from datetime import datetime
+from datetime import datetime, timezone
 
 from app.schemas.user import User
 from app.db.db import _MongoClientSingleton, MessagesCollection
@@ -16,7 +16,7 @@ async def save_message(message_sid: str, user: User, from_user: bool = False):
                     "from": user.phone if from_user else settings.BUSINESS_NUMBER,
                     "to": settings.BUSINESS_NUMBER if from_user else user.phone,
                     "message_sid": message_sid,
-                    "datetime": get_current_datetime(),
+                    "datetime": datetime.now(timezone.utc)
                 }
 
                 await MessagesCollection().insert_one(document, session=session)

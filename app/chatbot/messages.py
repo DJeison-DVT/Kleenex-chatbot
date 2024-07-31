@@ -11,6 +11,7 @@ from app.schemas.user import User
 from app.core.config import settings
 from app.core.services.messages import save_message
 from app.db.db import MessagesCollection
+from app.core.services.datetime_mexico import UTC_to_local
 
 client = Client(settings.TWILIO_ACCOUNT_SID, settings.TWILIO_AUTH_TOKEN)
 
@@ -87,11 +88,13 @@ async def get_user_messages(user_id: str):
 
         text, photo_url = await retrieve_body(message["message_sid"])
 
+        local_datetime = UTC_to_local(message['datetime'])
+
         messages.append({
             "message_sid": message["message_sid"],
             "from_": message["from"],
             "to": message["to"],
-            "datetime": message["datetime"],
+            "datetime": local_datetime,
             "text": text,
             "photo_url": photo_url
         })
