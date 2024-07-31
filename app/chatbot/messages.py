@@ -82,17 +82,11 @@ async def get_user_messages(user_id: str):
     cursor = MessagesCollection().find({"client_id": ObjectId(user_id)})
     messages = []
     async for message in cursor:
-        print(message)
-
         message["_id"] = str(message["_id"])
         message["client_id"] = str(message["client_id"])
 
         text, photo_url = await retrieve_body(message["message_sid"])
 
-        if not photo_url:
-            photo_url = None
-
-        # Append the message to the list
         messages.append({
             "message_sid": message["message_sid"],
             "from_": message["from"],
@@ -101,5 +95,7 @@ async def get_user_messages(user_id: str):
             "text": text,
             "photo_url": photo_url
         })
+
+    messages.sort(key=lambda x: x["datetime"], reverse=True)
 
     return messages
