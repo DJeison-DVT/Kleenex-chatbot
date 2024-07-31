@@ -8,11 +8,12 @@ from app.schemas.participation import Participation, Status
 from app.schemas.user import User
 from app.chatbot.steps import Steps
 from app.db.db import _MongoClientSingleton
+from app.core.services.datetime_mexico import get_current_datetime
 
 
 @pytest.mark.asyncio
 async def test_get_prize(db: AsyncIOMotorClient, clean_db):
-    today = datetime.now()
+    today = get_current_datetime()
     priority_number = 1
     prize = "Test Prize"
     await db.prizes.insert_one({
@@ -40,7 +41,7 @@ async def test_get_prize(db: AsyncIOMotorClient, clean_db):
 
 @pytest.mark.asyncio
 async def test_multiple_prizes(db: AsyncIOMotorClient, clean_db):
-    today = datetime.now()
+    today = get_current_datetime()
 
     prizes = [f"Prize {i}" for i in range(1, 26)]  # 25 prizes
     # Generate 25 unique random numbers from 1 to 100
@@ -101,7 +102,7 @@ async def test_set_priority_number(db: AsyncIOMotorClient, clean_db):
     # Create a participation
     participation_data = {
         "user": user.to_dict(),
-        "datetime": datetime.now(),
+        "datetime": get_current_datetime(),
         "status": Status.INCOMPLETE.value,
         "flow": Steps.PRIORITY_NUMBER.value,
     }
@@ -125,7 +126,7 @@ async def test_set_priority_number(db: AsyncIOMotorClient, clean_db):
     assert participation.status == Status.COMPLETE.value
 
     # Fetch the counter for today
-    counter_result = await db.counters.find_one({"_id": datetime.now().strftime("%Y-%m-%d")})
+    counter_result = await db.counters.find_one({"_id": get_current_datetime().strftime("%Y-%m-%d")})
     assert counter_result is not None
     assert counter_result["value"] == 1
 
@@ -153,7 +154,7 @@ async def test_set_priority_numbers(db: AsyncIOMotorClient, clean_db):
     for _ in range(5):
         participation_data = {
             "user": user.to_dict(),
-            "datetime": datetime.now(),
+            "datetime": get_current_datetime(),
             "status": Status.INCOMPLETE.value,
             "flow": Steps.PRIORITY_NUMBER.value,
         }

@@ -4,9 +4,10 @@ from typing import Dict
 
 from app.db.db import _MongoClientSingleton, ParticipationsCollection, CountersCollection, PrizesCollection
 from app.schemas.participation import Participation, Status
+from app.core.services.datetime_mexico import get_current_datetime
 
 
-async def count_participations(date: datetime = datetime.now()) -> int:
+async def count_participations(date: datetime = get_current_datetime()) -> int:
     date = date.strftime("%Y-%m-%d")
     print(date)
     count = await CountersCollection().find_one({"_id": date})
@@ -25,7 +26,7 @@ async def get_prize(priority_number: int, date: datetime, session) -> Dict:
 
 
 async def set_priority_number(participation: Participation):
-    today = datetime.now().strftime("%Y-%m-%d")
+    today = get_current_datetime().strftime("%Y-%m-%d")
     priority_number = -1
     async with await _MongoClientSingleton().mongo_client.start_session() as session:
         async with session.start_transaction():
@@ -40,7 +41,7 @@ async def set_priority_number(participation: Participation):
                 priority_number = result["value"]
                 participation.priority_number = priority_number
                 participation.status = Status.COMPLETE.value
-                participation.prize = await get_prize(priority_number, datetime.now(), session)
+                participation.prize = await get_prize(priority_number, get_current_datetime(), session)
 
                 object_id = ObjectId(participation.id)
                 updated_participation = participation.to_dict()

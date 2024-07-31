@@ -9,6 +9,7 @@ from app.db.db import ParticipationsCollection, PrizeCodesCollection, _MongoClie
 from app.chatbot.steps import Steps
 from app.core.services.users import fetch_user_by_phone, update_user_by_phone
 from app.core.config import settings
+from app.core.services.datetime_mexico import get_current_datetime
 
 
 async def fetch_participations(
@@ -65,7 +66,7 @@ async def fetch_participation_by_phone(phone: str) -> Participation:
     return Participation(**existing_participation)
 
 
-async def count_participations(date: datetime = datetime.now(timezone.utc).date()) -> int:
+async def count_participations(date: datetime = get_current_datetime().date()) -> int:
     start_of_day = datetime(
         date.year,
         date.month,
@@ -93,7 +94,7 @@ async def create_participation(
 
     try:
         result = await ParticipationsCollection().insert_one({
-            "datetime": datetime.now(),
+            "datetime": get_current_datetime(),
             "user": user,
             "status": Status.INCOMPLETE.value,
             "flow": flow,
@@ -198,7 +199,7 @@ async def add_participation(participation: Participation):
     if not user:
         raise ValueError("User not found")
 
-    today = datetime.now().strftime("%Y-%m-%d")
+    today = get_current_datetime().strftime("%Y-%m-%d")
 
     user.submissions[today] = user.submissions.get(today, 0) + 1
     await update_user_by_phone(phone, user)

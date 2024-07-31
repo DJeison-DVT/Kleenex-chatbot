@@ -7,6 +7,7 @@ from app.schemas.participation import ParticipationCreation, Participation, Stat
 from app.schemas.user import User
 from app.core.services.participations import *
 from app.core.services.users import update_user_by_phone
+from app.core.services.datetime_mexico import get_current_datetime
 
 
 @pytest.mark.asyncio
@@ -46,7 +47,7 @@ async def test_fetch_participations(db: AsyncIOMotorClient, clean_db):
         "submissions": {}
     }
     participation_data = {
-        "datetime": datetime.now(),
+        "datetime": get_current_datetime(),
         "user": user_data,
         "status": Status.INCOMPLETE.value
     }
@@ -71,7 +72,7 @@ async def test_fetch_participation_by_id(db: AsyncIOMotorClient, clean_db):
     }
     participation_data = {
         "_id": ObjectId(),
-        "datetime": datetime.now(),
+        "datetime": get_current_datetime(),
         "user": user_data,
         "status": Status.INCOMPLETE.value
     }
@@ -94,7 +95,7 @@ async def test_fetch_participation_by_phone(db: AsyncIOMotorClient, clean_db):
         "submissions": {}
     }
     participation_data = {
-        "datetime": datetime.now(),
+        "datetime": get_current_datetime(),
         "user": user_data,
         "status": Status.INCOMPLETE.value
     }
@@ -117,7 +118,7 @@ async def test_count_participations(db: AsyncIOMotorClient, clean_db):
         "submissions": {}
     }
     participation_data = {
-        "datetime": datetime.now(),
+        "datetime": get_current_datetime(),
         "user": user_data,
         "status": Status.COMPLETE.value
     }
@@ -125,7 +126,7 @@ async def test_count_participations(db: AsyncIOMotorClient, clean_db):
     await db.participations.insert_one(participation_data)
 
     participation_data = {
-        "datetime": datetime.now(),
+        "datetime": get_current_datetime(),
         "user": user_data,
         "status": Status.INCOMPLETE.value
     }
@@ -150,7 +151,7 @@ async def test_update_participation(db: AsyncIOMotorClient, clean_db):
     }
     participation_data = {
         "_id": ObjectId(),
-        "datetime": datetime.now(),
+        "datetime": get_current_datetime(),
         "user": user_data,
         "status": Status.INCOMPLETE.value,
         "flow": Steps.ONBOARDING.value
@@ -179,7 +180,7 @@ async def test_delete_participation_by_id(db: AsyncIOMotorClient, clean_db):
     }
     participation_data = {
         "_id": ObjectId(),
-        "datetime": datetime.now(),
+        "datetime": get_current_datetime(),
         "user": user_data,
         "status": Status.INCOMPLETE.value
     }
@@ -206,7 +207,7 @@ async def test_update_participation_user_on_user_update(db: AsyncIOMotorClient, 
 
     participation_data = {
         "_id": ObjectId(),
-        "datetime": datetime.now(),
+        "datetime": get_current_datetime(),
         "user": user_data,
         "status": Status.INCOMPLETE.value
     }
@@ -220,7 +221,7 @@ async def test_update_participation_user_on_user_update(db: AsyncIOMotorClient, 
 
     participation_data = {
         "_id": ObjectId(),
-        "datetime": datetime.now(),
+        "datetime": get_current_datetime(),
         "user": user_data,
         "status": Status.COMPLETE.value
     }

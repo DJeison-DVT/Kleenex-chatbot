@@ -5,6 +5,7 @@ from datetime import datetime, timezone
 from app.schemas.participation import Status
 from app.core.config import settings
 from tests.api.test_api_users import SECTION as USER_SECTION
+from app.core.services.datetime_mexico import get_current_datetime
 
 SECTION = "/participations/"
 PHONE = "1234567890"
@@ -274,7 +275,7 @@ async def test_api_count_participations_by_date():
         assert response.status_code == 200
 
         # Count participations for today
-        today_str = datetime.now(timezone.utc).date().isoformat()
+        today_str = get_current_datetime().date().isoformat()
         response = await client.get(FULL_URL + "count", params={"date": today_str})
         assert response.status_code == 200
 

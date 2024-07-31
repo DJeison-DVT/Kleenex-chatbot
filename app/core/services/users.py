@@ -4,6 +4,7 @@ from datetime import datetime
 from app.schemas.user import User, UserCreation
 from app.db.db import UsersCollection, ParticipationsCollection, _MongoClientSingleton
 from app.core.config import settings
+from app.core.services.datetime_mexico import get_current_datetime
 
 
 async def fetch_users() -> List[User]:
@@ -78,7 +79,7 @@ async def delete_user_by_phone(phone: str):
 
 
 def can_participate(user: User) -> bool:
-    today = datetime.now().strftime("%Y-%m-%d")
+    today = get_current_datetime().strftime("%Y-%m-%d")
     submissions = user.submissions.get(today, 0)
     if submissions >= settings.DAILY_PARTICIPAITONS:
         return False

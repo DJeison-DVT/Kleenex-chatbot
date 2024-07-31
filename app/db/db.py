@@ -41,7 +41,7 @@ def PrizeCodesCollection() -> AgnosticDatabase:
     return MongoDatabase().codes
 
 
-def DashboardUsers() -> AgnosticDatabase:
+def DashboardUsersCollection() -> AgnosticDatabase:
     return MongoDatabase().dashboard_users
 
 

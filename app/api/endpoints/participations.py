@@ -8,6 +8,7 @@ from app.schemas.participation import Participation, ParticipationCreation
 from app.serializers.participation import serialize_participations, serialize_participation
 from app.core.services.participations import *
 from app.core.services.priority_number import count_participations
+from app.core.services.datetime_mexico import get_current_datetime
 
 router = APIRouter()
 
@@ -53,7 +54,7 @@ async def fetch_all_participations(
 @router.get("/count")
 async def api_count_participations(
     date: Optional[datetime] = Query(
-        datetime.now(timezone.utc), description="Filter participations by date"),
+        get_current_datetime(), description="Filter participations by date"),
 ):
     count = await count_participations(date)
     return {"count": count}

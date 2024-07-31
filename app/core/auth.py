@@ -7,8 +7,9 @@ from typing import Annotated
 from jwt.exceptions import InvalidTokenError
 
 from app.core.config import settings
-from app.db.db import DashboardUsers
+from app.db.db import DashboardUsersCollection
 from app.schemas.auth import *
+from app.core.services.datetime_mexico import get_current_datetime
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/token")
@@ -23,7 +24,7 @@ def get_password_hash(password):
 
 
 async def get_user(username: str):
-    user = await DashboardUsers().find_one({"username": username})
+    user = await DashboardUsersCollection().find_one({"username": username})
     return DashboardUserInDB(**user) if user else None
 
 
@@ -32,7 +33,7 @@ async def create_user(user: DashboardUserCreate):
     user_dict = user.model_dump()
     user_dict["hashed_password"] = hashed_password
     del user_dict["password"]
-    await DashboardUsers().insert_one(user_dict)
+    await DashboardUsersCollection().insert_one(user_dict)
     return DashboardUser(**user_dict)
 
 
@@ -48,9 +49,9 @@ async def authenticate_user(username: str, password: str):
 def create_access_token(data: dict, expires_delta: timedelta | None = None):
     to_encode = data.copy()
     if expires_delta:
-        expire = datetime.now(timezone.utc) + expires_delta
+        expire = get_current_datetime() + expires_delta
     else:
-        expire = datetime.now(timezone.utc) + timedelta(minutes=15)
+        expire = get_current_datetime() + timedelta(minutes=60)
     to_encode.update({"exp": expire})
     encoded_jwt = jwt.encode(
         to_encode, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
