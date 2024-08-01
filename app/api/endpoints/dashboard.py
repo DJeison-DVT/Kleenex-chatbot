@@ -2,7 +2,7 @@ from fastapi import APIRouter, HTTPException, Response, Depends
 from pydantic import BaseModel
 from typing import Annotated
 
-from app.core.auth import RoleChecker
+from app.core.auth import RoleChecker, get_current_user, DashboardUser
 from app.core.services.participations import accept_participation, fetch_participation_by_id, update_participation
 from app.core.services.dashboard_users import fetch_dashboard_users, delete_dashboard_user_by_id
 from app.schemas.participation import Status
@@ -38,7 +38,7 @@ async def handle_accept(ticket_id, serial_number=None, rejection_reason=None):
 async def accept(
     request: AcceptRequest,
     response: Response,
-    _: Annotated[bool, Depends(RoleChecker(allowed_roles=["user", "admin"]))]
+    _: Annotated[DashboardUser, Depends(get_current_user)],
 ):
     response.headers["Access-Control-Allow-Origin"] = "*"
     response.headers["Access-Control-Allow-Methods"] = "POST, OPTIONS"
@@ -65,7 +65,7 @@ async def accept(
 async def reject(
     request: AcceptRequest,
     response: Response,
-    _: Annotated[bool, Depends(RoleChecker(allowed_roles=["user", "admin"]))]
+    _: Annotated[DashboardUser, Depends(get_current_user)],
 ):
     response.headers["Access-Control-Allow-Origin"] = "*"
     response.headers["Access-Control-Allow-Methods"] = "POST, OPTIONS"

@@ -1,8 +1,10 @@
 from fastapi import APIRouter, Response, HTTPException, Query
-from typing import Optional
+from typing import Optional, Annotated
 from pymongo.errors import InvalidDocument
-from datetime import datetime, timezone
+from datetime import datetime
 
+
+from app.core.auth import *
 from app.utils.decorators import check_existence, validate_object_id
 from app.schemas.participation import Participation, ParticipationCreation
 from app.serializers.participation import serialize_participations, serialize_participation
@@ -38,6 +40,7 @@ async def get_participation_by_phone(phone: str):
 @router.get("/")
 @check_existence
 async def fetch_all_participations(
+    _: Annotated[DashboardUser, Depends(get_current_user)],
     limit: Optional[int] = Query(
         None, description="Limit the number of participations returned"),
     date: Optional[datetime] = Query(

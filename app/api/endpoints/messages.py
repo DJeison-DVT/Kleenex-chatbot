@@ -1,17 +1,17 @@
 from fastapi import APIRouter, HTTPException, Response, Depends, Query
 from typing import Annotated
 
+from app.core.auth import *
 from app.chatbot.messages import get_user_messages
-from app.core.auth import RoleChecker
 
 router = APIRouter()
 
 
-@router.get("/")
+@router.get("/history")
 async def fetch_user_messages(
     response: Response,
-    _: Annotated[bool, Depends(RoleChecker(allowed_roles=["admin"]))],
-    id: str = Query(..., description="The phone number of the user")
+    _: Annotated[DashboardUser, Depends(get_current_user)],
+    id: str = Query(..., description="The id of the user")
 ):
     messages = await get_user_messages(id)
     if not messages:
