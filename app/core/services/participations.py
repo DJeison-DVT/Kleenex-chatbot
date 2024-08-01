@@ -70,22 +70,6 @@ async def fetch_participation_by_phone(phone: str) -> Participation:
     return Participation(**existing_participation)
 
 
-async def count_participations(date: datetime = get_current_datetime().date()) -> int:
-    start_of_day_local = datetime(
-        date.year, date.month, date.day, tzinfo=settings.LOCAL_TIMEZONE)
-    end_of_day_local = start_of_day_local + timedelta(days=1)
-
-    start_of_day_utc = start_of_day_local.astimezone(ZoneInfo("UTC"))
-    end_of_day_utc = end_of_day_local.astimezone(ZoneInfo("UTC"))
-
-    query = {
-        "datetime": {"$gte": start_of_day_utc, "$lt": end_of_day_utc},
-        "status": {"$ne": Status.INCOMPLETE.value}
-    }
-
-    return await ParticipationsCollection().count_documents(query)
-
-
 async def create_participation(
     participation: ParticipationCreation,
 ):

@@ -56,7 +56,6 @@ async def accept(
             response.status_code = 400
             return HTTPException(status_code=400, detail=str(e))
         print(e)
-
         response.status_code = 500
         return HTTPException(status_code=500, detail="Internal server error")
 
@@ -76,6 +75,7 @@ async def reject(
         reason = request.rejection_reason
         return await handle_accept(ticket_id, rejection_reason=reason)
     except Exception as e:
+        print(e)
         response.status_code = 500
         return HTTPException(status_code=500, detail=f"Internal server error : {e}")
 

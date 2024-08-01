@@ -60,7 +60,10 @@ async def api_count_participations(
         get_current_datetime(), description="Filter participations by date"),
 ):
     count = await count_participations(date)
-    return {"count": count}
+    return {
+        "datetime": date,
+        "count": count
+    }
 
 
 @router.get("/{id}")
