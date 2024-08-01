@@ -13,6 +13,8 @@ async def fetch_user_messages(
     _: Annotated[DashboardUser, Depends(get_current_user)],
     id: str = Query(..., description="The id of the user")
 ):
+    response.headers["Access-Control-Allow-Origin"] = "*"
+    response.headers["Access-Control-Allow-Methods"] = "GET"
     messages = await get_user_messages(id)
     if not messages:
         raise HTTPException(
