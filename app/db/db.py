@@ -55,5 +55,9 @@ def MessagesCollection() -> AgnosticDatabase:
     return MongoDatabase().messages
 
 
+def ParticipationLogs() -> AgnosticDatabase:
+    return MongoDatabase().participation_logs
+
+
 async def ping():
     await MongoDatabase().command("ping")
