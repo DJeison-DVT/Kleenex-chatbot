@@ -79,7 +79,7 @@ class ResponseDependentTransition(WhatsAppTransition):
         next_step = self.transitions.get(user_response, participation.flow)
         if user_response == "si acepto" or user_response == "confirmar":
             message.body_content = True
-        elif user_response == "no acepto":
+        elif user_response == "no acepto" or user_response == "editar":
             message.body_content = False
 
         if next_step == participation.flow:
